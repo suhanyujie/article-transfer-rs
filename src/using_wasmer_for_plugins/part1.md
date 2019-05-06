@@ -1,10 +1,11 @@
 # 用`Wasmer`进行插件开发1
 * *原文链接 https://wiredforge.com/blog/wasmer-plugin-pt-1/index.html/*
+>正文开始：
 
-* 几个月之前，[Wasmer](https://wasmer.io/) 团队发布了一个 `Web Assembly(aka wasm)` 解释器，用于rust程序的嵌入式开发。对于任何想要在项目中添加插件的人来说，这尤其令人兴奋，因为Rust提供了一种直接将程序编译到wasm的方法，这个应该是一个很好的选择。在这个系列的博客文章中，我们将研究如何使用 `wasmer` 和 `rust` 构建插件系统。
+* 几个月之前，[Wasmer](https://wasmer.io/) 团队发布了一个 `Web Assembly(aka wasm)` 解释器，用于rust程序的嵌入式开发。对于任何想要在项目中添加插件的人来说，这尤其令人兴奋，因为Rust提供了一种直接将程序编译到 `wasm` 的方法，这个应该是一个很好的选择。在这个系列的博客文章中，我们将研究如何使用 `wasmer` 和 `rust` 构建插件系统。
 
 ## 步骤
-* 在我们深入研究细节之前，我们心里要想像一个这个项目的轮廓。如果你在你的电脑上继续学习，你可以做到；如果没有电脑，一切做起来可能显得没那么神奇。为此，我们将利用cargo的workspace特性，该特性可以让我们在一个父项目中聚合一组相关的项目。这里相关的代码你都能在 [github仓库](https://github.com/FreeMasen/wiredforge-wasmer-plugin-code) 上找到，每个分支代表这个系列的不同状态。我们要研究的基本结构是这样的：
+* 在我们深入研究细节之前，我们心里要想像一个这个项目的轮廓。如果你在电脑上继续接下来的学习，你可以做到；如果没有电脑，一切做起来可能显得没那么神奇。为此，我们将利用 `cargo` 的workspace特性，该特性可以让我们在一个父项目中聚合一组相关的项目。这里相关的代码你都能在 [github仓库](https://github.com/FreeMasen/wiredforge-wasmer-plugin-code) 上找到，每个分支代表这个系列的不同状态。我们要研究的基本结构是这样的：
 
 ```
 wasmer-plugin-example
@@ -31,7 +32,6 @@ wasmer-plugin-example
 * `example-plugin` 用于测试插件以保证运行结果是我们期望的
 * `example-runner` 二进制项目，将会作为插件的host
 * `example-macro` 一个 `proc_macro` 库，将会在下一个部分文章中进行创建
-
 * 为此，我们将从创建父项目开始。运行以下命令：
 
 ```
@@ -117,7 +117,6 @@ crate-type = ["cdylib"]
 cargo build --target wasm32-unknown-unknown
 ```
 
-At this point we should have a file in ./target/wasm32-unknown-unknown/debug/example_plugin.wasm. Now that we have that, let's build a program that will run this, first we will get our dependencies all setup.
 * 到这里，我们应该有一个文件位于： `./target/wasm32-unknown-unknown/debug/example_plugin.wasm` 。现在，让我们构建一个可以运行这个的程序，第一步我们将设置好所有依赖。
 
 ## 我们的第一个运行器
@@ -246,8 +245,8 @@ fn main() {
 }
 ```
 
-* 好了，这次我们需要做更多的事情。开始的几行，更之前完全一样，我们将读取 `wasm` 并且实例化它。一旦加载完成，我们将获得 `wasm` 内存中的视图，我们首先从模块实例中获得 Ctx (context) 。一旦有了上下文，我们就可以通过调用内存(0)，`web assembly` 目前仅仅只有一个内存区域，所以在短期内，它的值总是0，但以后可能允许有多个内存。获取原始内存的最后一步是调用 `view()` 方法，我们终于可以修改模块的内存了。视图的类型是 `Vec<Cell<u8>>` ， 因此我们有一个字节数组，但是每个字节都包装在一个单元中。根据文档中，一个单元是允许修改不可变值的，在我们的场景中，它的意思是：“我不会让这个内存变长或变短，只是更改它的值”。
-* 现在，我们定义要传递给wasm内存的字符串，并将其转换为字节。我们还想跟踪字符串的字节长度，因此我们将其捕获它作为 `len` 。要将字符串字节放入内存字节中，我们将使用 `Zip` 迭代器，这将允许我们循环时能同时得到2个值。在每次迭代中，我们会在同一个索引中的单元和字符字节处停止，在循环体中，我们将 `wasm` 内存字节的值赋值为字符串字节的值。注意，我们从视图的索引1开始，这意味着我们的参数指针将是1，并且我们的字节长度将是 `len` 参数。
+* 好了，这次我们需要做更多的事情。开始的几行，更之前完全一样，我们将读取 `wasm` 并且实例化它。一旦加载完成，我们将获得 `wasm` 内存中的视图，我们首先从模块实例中获得 Ctx (context) 。一旦有了上下文，我们就可以通过调用内存(0)，`web assembly` 目前仅仅只有一个内存区域，所以在短期内，它的值总是0，但以后可能允许有多个内存。获取原始内存的最后一步是调用 `view()` 方法，我们终于可以修改模块的内存了。视图的类型是 `Vec<Cell<u8>>` ， 因此我们有一个字节数组，但是每个字节都包装在一个单元中。根据文档中，一个单元( [Cell](https://doc.rust-lang.org/std/cell/struct.Cell.html) )是允许修改不可变值的，在我们的场景中，它的意思是：“我不会让这个内存变长或变短，只是更改它的值”。
+* 现在，我们定义要传递给wasm内存的字符串，并将其转换为字节。我们还想跟踪字符串的字节长度，因此我们将其捕获它作为 `len` 。要将字符串字节放入内存字节中，我们将使用 [`Zip`](https://doc.rust-lang.org/std/iter/struct.Zip.html) 迭代器，这将允许我们循环时能同时得到2个值。在每次迭代中，我们会在同一个索引中的单元和字符字节处停止，在循环体中，我们将 `wasm` 内存字节的值赋值为字符串字节的值。注意，我们从视图的索引1开始，这意味着我们的参数指针将是1，并且我们的字节长度将是 `len` 参数。
 
 ```shell
 cargo run
