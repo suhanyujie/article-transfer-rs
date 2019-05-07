@@ -95,7 +95,7 @@ pub fn add(one: i32, two: i32) -> i32 {
 }
 ```
 
-* 上方示例看起来是一个非常原生并且没有意义的示例，但它符合我们的只处理数字的需求。现在我们开始编译称为 `Web Assembly` ，我们需要在 `Cargo.toml` 文件中设置一些东西。
+* 上方示例看起来是一个非常原生并且没有意义的示例，但它符合我们的只处理数字的需求。现在我们开始编译成为 `Web Assembly` ，我们需要在 `Cargo.toml` 文件中设置一些东西。
 
 ```rust
 # ./crates/example-plugin/Cargo.toml
