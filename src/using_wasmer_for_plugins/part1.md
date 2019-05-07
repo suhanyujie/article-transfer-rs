@@ -1,5 +1,6 @@
 # 用`Wasmer`进行插件开发1
 * 这是一篇翻译文：*原文链接 https://wiredforge.com/blog/wasmer-plugin-pt-1/index.html*
+* 翻译首发地址：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/using_wasmer_for_plugins/part1.md
 >正文开始：
 
 * 几个月之前，[Wasmer](https://wasmer.io/) 团队发布了一个 `Web Assembly(aka wasm)` 解释器，用于rust程序的嵌入式开发。对于任何想要在项目中添加插件的人来说，这尤其令人兴奋，因为Rust提供了一种直接将程序编译到 `wasm` 的方法，这个应该是一个很好的选择。在这个系列的博客文章中，我们将研究如何使用 `wasmer` 和 `rust` 构建插件系统。
