@@ -252,7 +252,7 @@ fn pair_combinator() {
  
 * 它似乎可以运行！但看结果类型：`((), String)` 。很明显，我们只关心右边的值，也就是字符串。大部分情况——我们的一些解析器只匹配输入中的模式，而不产生值，因此可以安全地忽略这类输出。适应这种场景，我们要用我们的解析器组合器来写另外2个组合器：left ，第一个解析器忽略结果，并返回第2个和对应的数字；right，这是我们想要使用在我们上面的测试上产生相反的结果——丢弃左侧的 `()` ，只留下我们处理后的字符串。
 
-## 编写功能
+## 引入 Functor
 * 但在此之前，让我们介绍另一个组合器，它的作用是将使组合字的编写变得更简单：`map` 。
 * 这2个组合只有1个目的：更改结果的类型。比如你有一个返回 `((), String)` 的解析器，你希望将它改成只返回字符串，正如随便一个例子所示。
 * 为此，我们传递一个函数，这个函数知道如何将原始类型转换为新的类型。在我们的示例中，这很简单： `|(_left, right)| right` 。更一般的说，它看起来类似于这样 `Fn(A) -> B`， 其中的 A 是解析器的原始结果类型，B 是新的类型。
@@ -286,6 +286,129 @@ where
 }
 ```
 
+* 这种模式在 Haskell 及其数学范畴理论中被称为“函子”。如果你有一个 A 类型，并且你还有一个可用的 map 函数，这样你就可以把一个函数从 A 传到 B 中，把它变成同一类型的东西，这个过程叫做“函子”。你可以在 Rust 中看到很多这样的地方，比如 Option 、 Result 、 Iterator 甚至 Future 中，都没有显示的将其这样命名。之所以这样，有一个原因：在 Rust 类型系统中，你不能认为一个 `functor` 是普遍存在的，因为它缺乏更上层的类型，但这是另一个话题了，所以回到原先的主题，这些 functor ，你只要寻找映射它的 map 函数。
+
+## 轮到 Trait
+* 你可能已经注意到，我们一直在重复解析器的签名这一点：`Fn(&str) -> Result<(&str, Output), &str>` ，你可能已经厌倦了像这样把它写出来，所以我认为现在是时候引入一个 Trait 了，让代码更加可读，并有利于我们对其进行扩展。
+* 但首先 ，让我们为一直在使用的返回值类型创建一个别名：
+
+```rust
+type ParseResult<'a, Output> = Result<(&'a str, Output), &'a str>;
+```
+
+* 所以现在，我们可以输入 `ParseResult<String>` 这样的东西，而不是之前的那个乱七八糟的东西。我们在其中添加了一个生命周期，因为类型生命需要它，但是很多时候， Rust 编译器应该能够为你推断出来。作为一个规范，尝试着把生命周期去掉，看看 rustc 是否会报异常，如果异常，再把生命周期放回去。
+* 在本例中，生命周期 `'a` ，由输入的参数的声明周期决定。
+* 现在，谈论 trait。我们还需要在这里输入生命周期，当你使用 trait 时，通常需要生命周期。这是一段额外的输入，但它的发行版就是这样子。
+
+```rust
+trait Parser<'a, Output> {
+    fn parse(&self, input: &'a str) -> ParseResult<'a, Output>;
+}
+```
+
+* 目前，它只有一个方法 `parse()` 方法，很熟悉吧：它和我们编写的解析器函数一样。
+* 为了更简单一点，我们可以为任何匹配解析器签名的函数实现这个 trait 。
+
+```rust
+impl<'a, F, Output> Parser<'a, Output> for F
+where
+    F: Fn(&'a str) -> ParseResult<Output>,
+{
+    fn parse(&self, input: &'a str) -> ParseResult<'a, Output> {
+        self(input)
+    }
+}
+```
+
+* 这样，我们不仅可以传递到完全实现解析器 trait 的解析器所传递相同函数，还可以实现其它的类型作为解析器。
+* 但更重要的是，它使我们无需一直键入那些冗长的函数签名。让我们重写 map 函数，看看它如何工作的。
+
+```rust
+fn map<'a, P, F, A, B>(parser: P, map_fn: F) -> impl Parser<'a, B>
+where
+    P: Parser<'a, A>,
+    F: Fn(A) -> B,
+{
+    move |input|
+        parser.parse(input)
+            .map(|(next_input, result)| (next_input, map_fn(result)))
+}
+```
+
+* 尤其是这里要注意一件事：不直接将解析器作为一个函数调用，我们现在必须去 `parser.parse(input)` ，因为我们不知道类型 P 是一个函数类型，我们只知道它实现了解析器，所以我们必须保证好解析器提供的接口。另外的，函数看起来也一样，而类型看起来也是整洁的。对于另外一点，产生了一个新的生命周期 `a` ，但总的来说，这已经改善很多了。
+* 如果我们用同样的方式重写 `pair` 函数，那就更好了。
+
+```rust
+fn pair<'a, P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Parser<'a, (R1, R2)>
+where
+    P1: Parser<'a, R1>,
+    P2: Parser<'a, R2>,
+{
+    move |input| match parser1.parse(input) {
+        Ok((next_input, result1)) => match parser2.parse(next_input) {
+            Ok((final_input, result2)) => Ok((final_input, (result1, result2))),
+            Err(err) => Err(err),
+        },
+        Err(err) => Err(err),
+    }
+}
+```
+
+* 这里也是一样，唯一的改变就是整理了的类型签名，并且需要使用 `parser.parse(input)` 而非 `parser(input)` 。
+* 实际上，我们也整理一下 `pair` 的函数体，就像我们处理 `map` 一样。
+
+```rust
+fn pair<'a, P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Parser<'a, (R1, R2)>
+where
+    P1: Parser<'a, R1>,
+    P2: Parser<'a, R2>,
+{
+    move |input| {
+        parser1.parse(input).and_then(|(next_input, result1)| {
+            parser2.parse(next_input)
+                .map(|(last_input, result2)| (last_input, (result1, result2)))
+        })
+    }
+}
+```
+
+* `Result` 中的 `and_then` 方法和 `map` 是类似的，只要映射的函数不将返回的新值放入 Result 中，而是返回一个全新的 Result 。上面代码实际上和前面使用的 match 代码块一样。我们稍后回到 `and_then` ，但现在，我们要实现那些被实现了的 `left` 和 `right` 组合器，现在我们有了一个漂亮的的 `map` 。
+
+## Left 和 Right
+* 有了 `pair` 和 `map` ，我们就可以简单的写出 left 和 right 。
+
+```rust
+fn left<'a, P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Parser<'a, R1>
+where
+    P1: Parser<'a, R1>,
+    P2: Parser<'a, R2>,
+{
+    map(pair(parser1, parser2), |(left, _right)| left)
+}
+
+fn right<'a, P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Parser<'a, R2>
+where
+    P1: Parser<'a, R1>,
+    P2: Parser<'a, R2>,
+{
+    map(pair(parser1, parser2), |(_left, right)| right)
+}
+```
+
+* 我们使用 `pair` 组合器将2个解析器组合到一个产生元组结果的解析器中，然后我们使用 `map` 组合成员选择我们想要保留的元组部分。
+* 重写解析前两部分元素标签的测试，现在更简洁了，在这个过程中，我们获得了一些新的解析器的功能。
+* 不过，我们必须先更新两个解析器，用于使用 `Parser` 和 `ParseResult` 。`match_literal` 则会更加复杂：
+
+```rust
+fn match_literal<'a>(expected: &'static str) -> impl Parser<'a, ()> {
+    move |input: &'a str| match input.get(0..expected.len()) {
+        Some(next) if next == expected => Ok((&input[expected.len()..], ())),
+        _ => Err(input),
+    }
+}
+```
+
+* 
 
 
-* 翻译进度： `This pattern is what's called a "functor" in Haskell and its mathematical sibling...`
+* 翻译进度： `In addition to changing the return type...`
