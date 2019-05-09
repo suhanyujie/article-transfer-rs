@@ -173,12 +173,119 @@ fn identifier(input: &str) -> Result<(&str, String), &str> {
 
 * 和往常一样，我们先查看一些类型。这次，我们不是编写函数来构建解析器，而是像最开始的那样编写解析器本身。这里值得注意的是，我们没有返回 `()` 的 result 类型，而是返回一个 String 元组，以及剩余的输入部分。这个字符串将包含我们刚刚解析过的标识符。
 * 记住这一点，首先我们创建一个空字符串，并调用它进行匹配。这将得到我们的结果值。我们还会得到一个迭代器来逐个遍历这些分开的输入字符。
+* 第一步是看前缀是否是字母开始。我们从迭代器中取出第一个字符，并检查他是否是字母： `next.is_alphabetic()` 。在这里，Rust标准库当然会帮助我们处理 Unicode ——它将匹配任意字母，不仅仅是 ASCII 。如果它是一个字母，我们将把它放入匹配完成的字符串中，如果不是，很明显，我们没有找到元素标识符，我们将直接返回一个 error 。
+* 第二步，我们继续从迭代器中提取字符，并把它放入正在构建的字符串中，直到我们找到一个不符合 `is_alphanumeric()` （类似于 `is_alphabetic()` ），也不匹配字母表中的任意字符，也不是 `-` 字符。
+
+* 当我们第一次看到不匹配这些条件时，这意味着我们已经完成了解析，因此我们跳出循环，并返回我们处理好的字符串，记住我们要剥离出我们已经处理的输入字符。同样的，如果迭代器迭代完成，表示我们到达了输入的末尾。
+* 值得注意的是，当我们看到不是字母数字或 `-` 时，我们没有返回异常。一旦匹配了第一个字母，我们就已经有足够的内容来创建一个有效的标识符，在解析标识符之后，在输入字符串中解析更多的东西是完全正常的，所以我们只需停止解析并返回结果。只有当我们连第一个字母都找不到时，我们才会返回一个异常，因为在这种情况下，输入中肯定没有标识符。
+* 还记得我们要将 XML 文档解析为结构体元素吗？
+
+```Rust
+struct Element {
+    name: String,
+    attributes: Vec<(String, String)>,
+    children: Vec<Element>,
+}
+```
+
+* 实际上，我们刚刚完成了第一部分的解析器，解析 `name` 字段。我们解析器返回的字符串就是这样，对于每个属性的第一部分，它也是正确的。
+* 开始测试。
+
+```rust
+#[test]
+fn identifier_parser() {
+    assert_eq!(
+        Ok(("", "i-am-an-identifier".to_string())),
+        identifier("i-am-an-identifier")
+    );
+    assert_eq!(
+        Ok((" entirely an identifier", "not".to_string())),
+        identifier("not entirely an identifier")
+    );
+    assert_eq!(
+        Err("!not at all an identifier"),
+        identifier("!not at all an identifier")
+    );
+}
+```
+
+* 我们看到第一种情况，字符串 `i-am-an-identifier` 被完整解析，只剩下空字符串。在第二种情况下，解析器返回 `not` 作为标识符，其余的字符串作为剩余的输入返回。在第三种情况下，解析器完全失败，因为它找到的第一个字符不是字母。
+
+## 组合器
+* 现在我们可以解析开头的 `<` ，也可以解析下面的标识符，但是我们需要同时解析这2个，以便于能够向下运行。因此，下一步将编写另一个解析器构建器函数，该函数将两个解析器作为输入，并返回一个新的解析器，它按顺序解析这两个解析器。换句话说，是另一个解析器组合器，因为它将两个解析器组合成一个新的解析器。让我们看看能不能实现它。
+
+```rust
+fn pair<P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Fn(&str) -> Result<(&str, (R1, R2)), &str>
+where
+    P1: Fn(&str) -> Result<(&str, R1), &str>,
+    P2: Fn(&str) -> Result<(&str, R2), &str>,
+{
+    move |input| match parser1(input) {
+        Ok((next_input, result1)) => match parser2(next_input) {
+            Ok((final_input, result2)) => Ok((final_input, (result1, result2))),
+            Err(err) => Err(err),
+        },
+        Err(err) => Err(err),
+    }
+}
+```
+
+* 这里稍微有点复杂，但你应该知道接下来要做的：从查看类型开始。
+* 首先，我们有四个类型： `P1`， `P2` ， `R1` ， `R2` 。这是分析器1，分析器2，结果1，结果2。P1 和 P2 是函数，你将注意到它们遵循已建立的解析器函数模式：就像返回值一样，他们以 `&str` 作为输入，并返回剩余输入和解析结果的`Result` ，或者返回一个异常。
+
+* 但是看看每个函数的结果类型： P1 是一个解析器，如果成功，它将生成 R1， P2 也将生成 R2 。最终的解析器的结果是——函数的返回值——是 (R1, R2) 。因此，这个解析器的逻辑是首先在输入上运行解析器 P1 ，保留它的结果，然后在 P1 返回的作为输入运行 P2 ，如果这2个方法都能正常运行，我们将这2个结果合并为一个元组 `(R1, R2)` 。
+* 看看代码，它也确实是这么实现的。我们首先在输入上运行第一个解析器，然后运行第2个解析器，然后将两个结果组合成一个元组并返回。如果其中一个解析器遇到异常，我们立即返回对应的错误。
+* 这样的话，我们可以传入之前的2个解析器，` match_literal` 和 `identifier` ，来实际的解析一下 XML 标签一开始的字节。我们写个测试测一下它是否能起作用。
+
+```rust
+#[test]
+fn pair_combinator() {
+    let tag_opener = pair(match_literal("<"), identifier);
+    assert_eq!(
+        Ok(("/>", ((), "my-first-element".to_string()))),
+        tag_opener("<my-first-element/>")
+    );
+    assert_eq!(Err("oops"), tag_opener("oops"));
+    assert_eq!(Err("!oops"), tag_opener("<!oops"));
+}
+```
+ 
+* 它似乎可以运行！但看结果类型：`((), String)` 。很明显，我们只关心右边的值，也就是字符串。大部分情况——我们的一些解析器只匹配输入中的模式，而不产生值，因此可以安全地忽略这类输出。适应这种场景，我们要用我们的解析器组合器来写另外2个组合器：left ，第一个解析器忽略结果，并返回第2个和对应的数字；right，这是我们想要使用在我们上面的测试上产生相反的结果——丢弃左侧的 `()` ，只留下我们处理后的字符串。
+
+## 编写功能
+* 但在此之前，让我们介绍另一个组合器，它的作用是将使组合字的编写变得更简单：`map` 。
+* 这2个组合只有1个目的：更改结果的类型。比如你有一个返回 `((), String)` 的解析器，你希望将它改成只返回字符串，正如随便一个例子所示。
+* 为此，我们传递一个函数，这个函数知道如何将原始类型转换为新的类型。在我们的示例中，这很简单： `|(_left, right)| right` 。更一般的说，它看起来类似于这样 `Fn(A) -> B`， 其中的 A 是解析器的原始结果类型，B 是新的类型。
+
+```rust
+fn map<P, F, A, B>(parser: P, map_fn: F) -> impl Fn(&str) -> Result<(&str, B), &str>
+where
+    P: Fn(&str) -> Result<(&str, A), &str>,
+    F: Fn(A) -> B,
+{
+    move |input| match parser(input) {
+        Ok((next_input, result)) => Ok((next_input, map_fn(result))),
+        Err(err) => Err(err),
+    }
+}
+```
+
+* 类型说明了什么？ P 是我们的解析器。它在成功时返回 A 。F 是我们用来将 P 映射返回值的函数，它看起来和 P 一样，只是它的结果类型是 B 而不是 A 。
+* 在代码中，我们运行解析器（输入），如果它成功，我们获取结果并在其上运调用函数 `map_fn(result)` ，将 A 转换为 B ，这就是转换后解析器要执行的逻辑。
+* 实际上，让我们改变一下，稍微缩短这个函数，因为这个 map 实际上是一个常见的模式，Result 也实现了这个模式：
+
+```rust
+fn map<P, F, A, B>(parser: P, map_fn: F) -> impl Fn(&str) -> Result<(&str, B), &str>
+where
+    P: Fn(&str) -> Result<(&str, A), &str>,
+    F: Fn(A) -> B,
+{
+    move |input|
+        parser(input)
+            .map(|(next_input, result)| (next_input, map_fn(result)))
+}
+```
 
 
 
-
-
-
-
-
-* 翻译进度： `...just need to indicate that we succeeded in finding i...`
+* 翻译进度： `This pattern is what's called a "functor" in Haskell and its mathematical sibling...`
