@@ -1,5 +1,5 @@
 # 使用Rust进行解析器学习
-* 这是一篇翻译文：*原文链接 https://bodil.lol/parser-combinators*
+* 这是一篇翻译文：*原文链接 https://bodil.lol/parser-combinators/*
 * 翻译首发地址：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md
 >正文开始：
 
@@ -80,5 +80,105 @@ fn the_letter_a(input: &str) -> Result<(&str, ()), &str> {
 ```
 
 * 首先，我们看下输入和输出的类型：我们将一个字符串 slice 作为输入，正如我们讨论的，我们返回一个包含 `(&str, ())` 的      `Result` 或者错误类型 `&str` 。有趣的是 `(&str, ())` 这部分：正如我们所讨论的，我们应该返回一个能够分析下一个输入的结果的元组。 `&str` 是下一个输入，并且结果是单独的类型 `()` ，因为如果这个解析器成功运行，它将只能得到一个结果（只找到了字母 `a` ），并且在这种情况下，我们不特别需要返回字面 `a` ，我们只需要指出成功的找到了它就行。
+
+* 因此，我们看看解析器本身的代码。首先获取输入的第一个字符：`input.chars().next()` 。我们并没有尝试性的依赖标准库来避免带来 `Unicode` 的问题——我们要求它为字符串的字符提供 一个 `chars()` 迭代器，然后从其中取出第一个字符。这就是一个 `char` 类型的项，并且通过 `Option` 包装着，即 `Option<char>` ，如果是 `None` 类型的 `Option` 则意味着我们获取到的是一个空字符串。
+
+* 更糟糕的是，获取到的字符甚至可能不是我们想象中的 `Unicode` 字符。这很可能就是 `Unicode` 中的 "[grapheme cluster](http://www.unicode.org/glossary/#grapheme_cluster)" ，它可以由几个字符组成，这些字符实际上表示 "[scalar values](http://www.unicode.org/glossary/#unicode_scalar_value)" ，它比 "grapheme cluster" 大约还低2个层次。但是，这种方法未免也太激进了，就我们的目的而言，我们甚至不太可能看到 `ASCII` 字符集以外的字符，所以就先这么着吧。
+
+* 我们匹配一下 `Some('a')`，这就是我们正在寻找的特定结果，如果匹配成功，我们将返回成功 `Ok((&input['a'.len_utf8]()..], ()))` 。也就是说，我们从字符串 slice 中移出的解析的项（ 'a' ），并返回其余的字符，以及解析后的值，也就是 `empty()` 。考虑到 `Unicode` 字符集，在对字符串 `slice` 前，我们用标准库中的方法查询一下字符 `a` 在 UTF-8 中的长度——长度是1，但绝不要去猜测 Unicode 字符。
+
+* 如果我们得到其他 `Some(char)` ，或者没有，我们将返回一个 error 。正如之前提到的，我们现在的错误类型就是解析失败时的字符串 `slice` ，也就是我们我们传入的输入。它不是以 `a` 开头，所以返回错误给我们。这不是一个很严重的错误，但至少比“一些地方出了致命错误”要好一些。
+
+* 实际上，我们不需要这个解析器解析这个 `XML` ，但是我们需要做的第一件事是寻找开始的 `<` ，所以我们需要一些类似的东西。我们还需要解析 `>` ,`/` 和 `=` ，所以，也许我们可以创建一个函数来构建一个解析器来解析我们想要解析的字符。
+
+## 解析器构建器
+* 我们想象一下，如果要写一个函数：它可以为任意长度的静态字符串（不仅仅是单个字符）生成一个解析器。这样做甚至更简单一些，因为字符串 slice 是一个合法的 UTF-8 字符串 slice ，并且暂且不考虑 Unicode 字符集问题。
+
+```rust
+fn match_literal(expected: &'static str)
+    -> impl Fn(&str) -> Result<(&str, ()), &str>
+{
+    move |input| match input.get(0..expected.len()) {
+        Some(next) if next == expected => {
+            Ok((&input[expected.len()..], ()))
+        }
+        _ => Err(input),
+    }
+}
+```
+
+* 现在看起来有点不一样了。
+* 首先，看看类型，。我们的函数看起来不像一个解析器，它现在接受我们期望的字符串作为参数，并且返回值是看起来像解析器一样的东西。它是一个返回值是函数的函数——换句话说，它是一个高阶函数。基本上，我们在写的是生成一个像之前我们的 `the_letter_a` 一样的函数。
+
+* 因此，我们不是在函数体中执行一些逻辑，而是返回一个闭包，这个闭包才是执行逻辑的地方，并且与之前的解析器的“函数签名”是匹配的。
+* 匹配模式是一样的，只是我们不能直接匹配字符串文本，因为我们不知道他具体是什么，所以我们使用 `match` 和条件判断 `if next == expected` 来匹配。因此，它和之前完全一样，只是逻辑的执行是在闭包的内部。
+
+## 测试解析器
+* 我们将编写一个测试来确保我们做的是对的。
+
+```rust
+#[test]
+fn literal_parser() {
+    let parse_joe = match_literal("Hello Joe!");
+    assert_eq!(
+        Ok(("", ())),
+        parse_joe("Hello Joe!")
+    );
+    assert_eq!(
+        Ok((" Hello Robert!", ())),
+        parse_joe("Hello Joe! Hello Robert!")
+    );
+    assert_eq!(
+        Err("Hello Mike!"),
+        parse_joe("Hello Mike!")
+    );
+}
+```
+
+* 首先，我们构建解析器： `match_literal("Hello Joe!")` 。这应该使用字符串 `Hello Joe!` 作为参数，并返回字符串的其余部分，否则它应该提示失败并返回整个字符串。
+* 在第一种情况下，我们只是向他提供它期望的字符串作为参数，然后，我们看到它返回一个空字符串和 `()` 的值，这意味着：“我们按照正常流程解析了字符串，实际上你并不需要它返回给你这个值”。
+
+* 在第二种情况下，我们给它输入字符串 `Hello Joe! Hello Robert!` ，并且我们确实看到它使用了字符串 `Hello Joe!` 并返回其余的输入：` Hello Robert!`(空格开头的所有字符串)
+* 在第3个例子中，我们输入了一些不正确的值： `Hello Mike!`，请注意，它确实根据输入给出了错误并中断执行。一般来说， `Mike` 并不是正确的输入部分，它不是这个解析器要寻找的对象。
+
+## 用于不固定参数的解析器
+* 这样，我们来解析 `<`,`>`,`=`甚至 `</` 和 `/>` 。我们实际上做的差不多了。
+* 在开始 `<` 后的下一个元素是元素的名称。虽然我们不能用一个简单的字符串比较来做到这一点，但是我们可以用正则表达式。
+* 但是我们要克制自己，它将是一个很容易在简单代码中复制的正则表达式，并且我们不需要为此而去依赖于 `regex` 的 crate 库。我们要试试只试用 Rust 标准库来进行编写自己的解析器。
+
+* 回顾元素名称标识符的规范，它大概是这样：一个字母的字符，然后是若干个字母数字中横线 `-` 等多个字符。
+
+```rust
+fn identifier(input: &str) -> Result<(&str, String), &str> {
+    let mut matched = String::new();
+    let mut chars = input.chars();
+
+    match chars.next() {
+        Some(next) if next.is_alphabetic() => matched.push(next),
+        _ => return Err(input),
+    }
+
+    while let Some(next) = chars.next() {
+        if next.is_alphanumeric() || next == '-' {
+            matched.push(next);
+        } else {
+            break;
+        }
+    }
+
+    let next_index = matched.len();
+    Ok((&input[next_index..], matched))
+}
+```
+
+* 和往常一样，我们先查看一些类型。这次，我们不是编写函数来构建解析器，而是像最开始的那样编写解析器本身。这里值得注意的是，我们没有返回 `()` 的 result 类型，而是返回一个 String 元组，以及剩余的输入部分。这个字符串将包含我们刚刚解析过的标识符。
+* 记住这一点，首先我们创建一个空字符串，并调用它进行匹配。这将得到我们的结果值。我们还会得到一个迭代器来逐个遍历这些分开的输入字符。
+
+
+
+
+
+
+
 
 * 翻译进度： `...just need to indicate that we succeeded in finding i...`
