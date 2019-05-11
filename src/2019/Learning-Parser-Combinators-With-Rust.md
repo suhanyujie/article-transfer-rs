@@ -1,6 +1,6 @@
 # 使用Rust进行解析器学习
 * 这是一篇翻译文：*原文链接 https://bodil.lol/parser-combinators/*
-* 翻译首发地址：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md
+* 翻译[首发](https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md)地址：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md
 >正文开始：
 
 
@@ -408,7 +408,124 @@ fn match_literal<'a>(expected: &'static str) -> impl Parser<'a, ()> {
 }
 ```
 
-* 
+* 除了改变返回值类型外，我们还必须确保闭包的输入参数类型是 `&'a str` ，否则编译器可能会报错。
+* 对于标识符，只需要更改返回类型，就可以了，编译器会帮助你推导生命周期：
+
+```rust
+fn identifier(input: &str) -> ParseResult<String> {
+```
+
+* 现在测试一下，很不错，返回结果不再是 `()`
+
+```rust
+#[test]
+fn right_combinator() {
+    let tag_opener = right(match_literal("<"), identifier);
+    assert_eq!(
+        Ok(("/>", "my-first-element".to_string())),
+        tag_opener.parse("<my-first-element/>")
+    );
+    assert_eq!(Err("oops"), tag_opener.parse("oops"));
+    assert_eq!(Err("!oops"), tag_opener.parse("<!oops"));
+}
+```
+
+## 一个或多个空格的处理
+* 我们继续解析这个元素标签。我们获取了开始的 `<` ，并且我们获取了标识符。接下来呢？接下来应该是属性。
+* 不实际上，这些属性是可选的。我们必须找到一个正确处理可选的方法。
+* 还是等等吧，实际上在我们开始处理属性之前，先要处理空格。
+* 在元素名称结尾，和第一个属性名（如果有属性的话）之间有一个空格。我们需要处理这个空格。
+* 更糟糕的是，我们需要处理一个甚至更多空格，因为形如 `<element      attribute="value"/>` 的写法也是合法的，虽然空格多了点。因此，我们要好好考虑我们是否可以编写组合器来表达解析1个或者多个空格的思想。
+* 我们已经在标识符解析器中处理过，但那是通过手动完成的。不足为奇的是，这种代码一般没有很大的不同。
+
+```rust
+fn one_or_more<'a, P, A>(parser: P) -> impl Parser<'a, Vec<A>>
+where
+    P: Parser<'a, A>,
+{
+    move |mut input| {
+        let mut result = Vec::new();
+
+        if let Ok((next_input, first_item)) = parser.parse(input) {
+            input = next_input;
+            result.push(first_item);
+        } else {
+            return Err(input);
+        }
+
+        while let Ok((next_input, next_item)) = parser.parse(input) {
+            input = next_input;
+            result.push(next_item);
+        }
+
+        Ok((input, result))
+    }
+}
+```
+
+* 首先，我们正在构建的解析器的返回类型是 A ，组合解析器的返回类型是 `Vec<A>` —— 任意数量的 `A` 类型。
+* 代码看起来确实和处理标识符的那段很像。首先我们解析第一个元素，如果没有，我们返回一个 error 。然后我们解析尽可能多的元素，知道解析器遇到错误，这时我们返回 collected 到的所有元素的 vector 。
+* 看看这段代码，是不是很容易就能将其调整为符合0个或者更多的逻辑？我们只需移除解析器的第一次运行。
+
+```rust
+fn zero_or_more<'a, P, A>(parser: P) -> impl Parser<'a, Vec<A>>
+where
+    P: Parser<'a, A>,
+{
+    move |mut input| {
+        let mut result = Vec::new();
+
+        while let Ok((next_input, next_item)) = parser.parse(input) {
+            input = next_input;
+            result.push(next_item);
+        }
+
+        Ok((input, result))
+    }
+}
+```
+
+* 我们来编写一些测试来确保这2个方法能正常运行：
+
+```rust
+#[test]
+fn one_or_more_combinator() {
+    let parser = one_or_more(match_literal("ha"));
+    assert_eq!(Ok(("", vec![(), (), ()])), parser.parse("hahaha"));
+    assert_eq!(Err("ahah"), parser.parse("ahah"));
+    assert_eq!(Err(""), parser.parse(""));
+}
+
+#[test]
+fn zero_or_more_combinator() {
+    let parser = zero_or_more(match_literal("ha"));
+    assert_eq!(Ok(("", vec![(), (), ()])), parser.parse("hahaha"));
+    assert_eq!(Ok(("ahah", vec![])), parser.parse("ahah"));
+    assert_eq!(Ok(("", vec![])), parser.parse(""));
+}
+```
+
+* 注意两者之间的区别：对于 `one_or_more` ，查找空字符串是一个错误，因为它至少需要查看它的子解析器的一种情况，但对于 `zero_or_more` ，空字符串只表示 0 的情况，这不是错误。
+* 在这一点上，考虑如何归纳这两种情况是合理而必要的，因为其中一个是另一个的副本，只是删除了一个位。可能很容易就能用 `zero_or_more` 来表示 `one_or_more` ，如下所示：
+
+```rust
+fn one_or_more<'a, P, A>(parser: P) -> impl Parser<'a, Vec<A>>
+where
+    P: Parser<'a, A>,
+{
+    map(pair(parser, zero_or_more(parser)), |(head, mut tail)| {
+        tail.insert(0, head);
+        tail
+    })
+}
+```
+
+* 在这里，我们遇到了 Rust 的一些问题，我不是说针对 Vec 没有 `cons` 方法的问题，但我知道 Lisp 程序员在读这段代码时都会这样想。甚至可能会更甚一些。
+* 我们有了这个解析器，所以我们不能对这个参数传递2次，编译器会告诉你这行不通：你在试着移除一个已经移除的值。那么，我们能让我们的选择器使用参数的引用吗？不行的，事实证明，遇到变量的借用检查问题——我们甚至现在不用去理会。因为这些解析器就是一些函数，所以它们不会直接实现克隆，这将很省事，我们现在遇到困难了，我们不能在组合器中轻松的解析。
+
+* 不过这也没什么大不了的。这意味着我们无法使用组合器表达 `one_or_more` ，但事实证明这2个东西是你经常使用的组合器，也时常被复用，而且，如果你真的想要，你可以使用 `RangeBound` 编写一个组合器，额外附加一个解析器并根据 `range(0..)` 的方式，如  `zero_or_more`, `range(1..)` ,如 `one_or_more`, `range(5..=6)` 或完整的5个、6个，总之随意而为。
+* 让我们把他留给读者作为练习。现在，我们只需要 0 或者 1 或者更多就可以。
+* 另一个练习是，尝试找到一个解决这些所有权问题的方法——也许通过在 `Rc` 中包装一个解析器使其 `cloneable` 。
 
 
-* 翻译进度： `In addition to changing the return type...`
+* 翻译进度： `A Predicate Combinator...`
