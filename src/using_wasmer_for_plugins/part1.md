@@ -112,7 +112,7 @@ edition = "2018"
 crate-type = ["cdylib"]
 ```
 
-* 这里比较关键的是 `crate-type = ["cdylib"]`，它表示我们将会编译这个 crate 库成为一个 c 链接库。现在我们使用下面的命令进行编译：
+* 这里比较关键的是 `crate-type = ["cdylib"]`，它表示我们将会编译这个 crate 库生成一个 c 动态链接库。现在我们使用下面的命令进行编译：
 
 ```shell
 cargo build --target wasm32-unknown-unknown
