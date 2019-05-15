@@ -194,7 +194,7 @@ job_state = job_state ^ complete_job;
 ```
 
 * 虽然不是最有用的东西，但它肯定有它的使用场景。这里有一个交互工具来展示效果。
-* ![images-interactive-binary-xor-utility](binary-pt1-images-interactive-binary-xor-utility.png)
+* ![images-interactive-binary-xor-utility](./images/binary-pt1-images-interactive-binary-xor-utility.png)
 
 ## 一些有用的特性
 * 现在我想讲一些与语言有关的东西。确保你阅读了文档，以了解这些东西在你选择的语言中是如何工作的。
