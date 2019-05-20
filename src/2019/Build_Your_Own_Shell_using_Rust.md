@@ -8,7 +8,7 @@
 
 > 正文开始
 
-* 这是一个使用 Rust 构建自己的 shell 的教程，已经被收录在 [build-your-own-x](https://github.com/danistefanovic/build-your-own-x) 列表中。自己创建一个 shell 是理解 shell、终端模拟器、以及OS等协同工作的好办法。
+* 这是一个使用 Rust 构建自己的 shell 的教程，已经被收录在 [build-your-own-x](https://github.com/danistefanovic/build-your-own-x) 列表中。自己创建一个 shell 是理解 shell、终端模拟器、以及 OS 等协同工作的好办法。
 
 ## shell 是什么？
 * shell 是一个程序，它可以用于控制你的计算机。这在很大程度上简化了启动应用程序。但 shell 本身并不是一个交互式应用程序。
