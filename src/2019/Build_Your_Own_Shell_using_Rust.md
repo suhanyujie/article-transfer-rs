@@ -97,7 +97,7 @@ fn main(){
 ## shell 的内建函数
 * 事实证明， shell 不能简单的将某些命令分派给另一个进程。这些都是影响 shell 内部，所以，必须由 shell 本身实现。
 * 最常见的例子可能就是 `cd` 命令。要了解为什么 cd 必须是内建的 shell，请[查看这个链接](https://unix.stackexchange.com/a/38809)。处理内建的命令之外，实际上还有一个名为 cd 的程序。[这里](https://unix.stackexchange.com/a/38819)有关于二元概念的解释
-* 下面我们添加内置 cd 处理来支持我们的 shell 
+* 下面我们添加内建 cd 处理来支持我们的 shell 
 
 ```rust
 fn main(){
