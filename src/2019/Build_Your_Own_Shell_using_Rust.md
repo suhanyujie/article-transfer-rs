@@ -259,4 +259,7 @@ fn main(){
 ```
 
 ## 结语
-* 在不到 100 行的代码中，我们创建了一个 shell ，它可以用于许多日常操作，但是一个真正的 shell 会有更多的特性和功能。GNU 网站有一个关于 bash shell 的在线手册，其中包括了 shell 特性的列表，这是着手研究更高级功能的好地方。
+* 在不到 100 行的代码中，我们创建了一个 shell ，它可以用于许多日常操作，但是一个真正的 shell 会有更多的特性和功能。GNU 网站有一个关于 bash shell 的在线手册，其中包括了 [shell 特性](https://www.gnu.org/software/bash/manual/html_node/Basic-Shell-Features.html#Basic-Shell-Features)的列表，这是着手研究更高级功能的好地方。
+
+* 请注意，这对我来说是一个学习的项目，在简单性和健壮性之间需要权衡的情况下，我选择简单性。
+* 这个 shell 项目可以在我的 [GitHub](https://github.com/JoshMcguigan/bubble-shell) 上找到。在撰写本文时，最新提交是 [`a47640`](https://github.com/JoshMcguigan/bubble-shell/tree/a6b81d837e4f5e68cf0b72a4d55e95fb08a47640) 。另一个你可能感兴趣的学习 Rust shell 项目是 [Rush](https://github.com/psinghal20/rush)
