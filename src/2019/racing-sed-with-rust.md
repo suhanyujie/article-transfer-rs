@@ -12,18 +12,12 @@
 
 那又如何。
 
-X12 has various issues, but the one that triggered this post is that a file often contains just a single line. An X12 file starts with a fixed-length 106-byte header called an ISA segment. Among other things, this header specifies three different terminator characters to be used in the rest of the document.
-X12 有各种各样的问题，但是让我写这篇文章的原因是一个文件时常只包含一行。X12 文件以一个名为 ISA 段的固定长度 106 字节头开始的。初次之外，这个头指定了文档其余部分中使用的三个不同的结束符。
+X12 有各种各样的问题，但是让我写这篇文章的原因是一个文件时常只包含一行。一个 X12 文件以一个名为 ISA 段的固定长度 106 字节头开始的。除此之外，这个字节头指定了文档其余部分中使用的三个不同的结束符。
 
+一旦固定长度的头被排除了，文档的其余部分就由一些列可变长度的记录组成，这些记录称为段。每个段的末尾由段结束符标记。处理工具广泛允许使用尾部换行，但在这里不需要。
 
-Once the fixed-length header is out of the way, the rest of the document comprises a sequence of variable-length records known as segments. The end of each segment is marked by a segment terminator character. A trailing newline is widely permitted by processing tools, but is not required.
-一旦固定长度的头被排除了，文档的其余部分就由一些列可变长度的记录组成，这些记录称为段。每个段的末尾由段结束符标记。处理工具广泛允许使用拖尾换行，但在这里不需要。
+所有内容在一行中造成的问题是，用于数据处理和探索的标准 Unix 工具箱中的绝大部分工具都是设计成一次一行地处理数据。例如，假如你想查看一个大文件的开头，以查看它是否包含：`$ head < file`，并向你的终端打印前 10 行。如果你正在处理的整个文件只有一行，大小是 1.3G，那么这就没有多大帮助了。
 
-The problem with everything being on a single line is that the vast majority of the standard Unix toolbox for data processing and exploration is designed to work with data a line at a time. For example, say you want to take a peek at the beginning of a large file to see what sort of records it contains: $ head < file will print the first 10 lines to your terminal. If the entire file you’re dealing with is a single 1.3 gigabyte line, this is less than helpful.
-所有内容在一行中造成的问题是，用于数据处理和探索的标准 Unix 工具箱的绝大部分工具都是设计成一次一行的处理数据。例如，加入你想查看一个大文件的开头，以查看它是否包含：`$ head < file`，并向你的终端打印前 10 行。如果你正在处理的整个文件只有一行，大小是 1.3G，那么这就没有多大帮助了。
-
-
-Of course, the toolbox does contain ways of dealing with this kind of problem. The traditional and most widely-used segment terminator in X12 is the tilde (~). If we wanted the first 10 lines of an X12 file, we could use sed to insert newlines after every tilde before piping the output to head:
 当然，工具箱中确实包含了处理这类问题的方法。X12 中传统的、应用最广泛的段终止符是波浪号（~）。如果我们想要 X12 文件的前 10 行，我们可以使用 sed 在每个波浪线之后插入新的一行，然后再将内容输出到 `head`：
 
 ```
@@ -78,7 +72,6 @@ fn main() -> io::Result<()> {
 
 我们还没有做终止符检查，我们只通过 `STDIN` 和 `STDOUT` 处理 IO，但是用相同的文件下统计时间可以得到 1.68s，不行，还没达到要求。
 
-Reading the correct terminator out of the ISA segment is a simple improvement:
 从 ISA 段读取正确的终止符是一个简单的改进方法：
 
 ```rust
@@ -104,12 +97,9 @@ fn main() -> io::Result<()> {
 
 这将需要向源代码添加几行代码，但不会显著的影响运行时。（细心的人可能已经注意到这个版本没有编写 ISA 段，为了让代码更短，我忽略这一点。）
 
+就速度而言，这已经是 sed 单行程序的一个较大改进，它将自动为我们检测正确的终止符。不幸的是，如果想正确处理换行，这种方法就会有困难。我们可以很容易地要么替换所有换行，要么替换终止符后面的单个换行，但是我们不能匹配“任意数量的换行，而只能匹配终止符后面的换行”。
 
-This is already a significant improvment over the sed one-liner in terms of speed, and it will automatically detect the correct terminator for us. Unfortunately, we start to run into difficulty with this approach if want to handle newlines correctly. We could easily replace all newlines, or we could replace a single newline following a terminator, but we can’t match “any number of newlines but only following a terminator.”
-就速度而言，这已经是 sed 单行程序的一个较大改进，它将自动为我们检测正确的终止符。不幸的是，如果想正确处理换行，这种方法就会有困难。我们可以很容易地要么替换所有换行，要么替换终止符后面的单个换行，但是我们不能匹配“任意数量的换行，只能匹配终止符后面的换行”。
-
-We could try applying a regular expression to the stream, but that seems like overkill for such a simple transformation. What if we process the bytestream ourselves without relying on the aho_corasick library?
-我们可以尝试将正则表达式应用于流，但是对弈这样一个简单的转换来说，这样做似乎有些过了。如果自己处理字节流而不依赖 `aho_corasick` 库呢？
+我们可以尝试将正则表达式应用于流，但是对于这样一个简单的转换来说，这样做似乎有些过了。如果自己处理字节流而不依赖 `aho_corasick` 库呢？
 
 ```rust
 use std::io::{self, stdin, stdout, Read, BufReader, BufWriter, ErrorKind};
@@ -148,7 +138,6 @@ fn main() -> io::Result<()> {
 
 13 秒。哎呦，原来 `stream_replace_all` 为提高操作效率提供了很大助力。 
 
-We can regain a lot of that time—at the cost of some more code—by managing our own buffer rather than relying on the BufReader and lots of 1-byte read_u8() calls:
 通过管理我们自己的缓冲区，而不是依赖于 `BufReader` 和大量的 1-byte 的 `read_u8()` 调用，我们可以重新获得大量的时间 —— 但要付出更多的开销：
 
 ```rust
@@ -200,10 +189,63 @@ fn main() -> io::Result<()> {
 }
 ```
 
-As well as greatly reducing the number of read_u8 calls, we also gain a huge speedup by writing each segment in a single call to write_all (or two, for the last segment in a buffer) rather than a write_u8 call per character.
-除了大大减少 `read_u8` 调用的数量，我们还通过在一个单独的调用中编写每个段到 `write_all`（对于缓冲区的最后一个段，可以编写两个段），而不是为每个字符编写一个 `write_u8` 调用，如此，大大提高了速度。
+除了大大减少 `read_u8` 调用的数量，我们还通过把每一个段写入随后只单次地调用 `write_all`（或者两次，缓冲区中最后一个段也可能需要），而不是为每个字符编写一个 `write_u8` 调用，如此，大大提高了速度。
 
-The code is starting to get a bit more involved, but we’re down to 1.75 seconds. That’s a bit better! But… still slower than the first version. What magic is going on there? A look at the dependencies of the aho_corasick crate offers a clue: it depends on memchr.
-代码从这里开始变得有些复杂了，但是我们只需要 1.75s。这样好些了！但还是比第一个版本要慢。这是为什么？查看 `aho_corasick` crate 的依赖关系，它提供了一个线索：依赖于 `memchr`。
+代码从这里开始变得有些复杂了，但是执行只需要 1.75s。这样好些了！但。。。还是比第一个版本要慢。这是为什么？查看 `aho_corasick` crate 的依赖关系，它提供了一个线索：依赖于 `memchr`。
+
+## SIMD 和 memchr
+现代处理器支持各种不同的指令来执行对向量化的数据的操作，这些指令通常被广泛地集中在 SIMD 的名称下，用于单指令多数据（SIMD）。无需过多细节，这意味着不必检查整个文件中的每个字节来查看它是否是终止符，而是可以一次性的将他们加载到寄存器中，并在一个时钟周期内对它们进行比较。具体有多少取决于特定的 CPU 所提供的特性。
+
+听起来管理这个有点复杂，不是吗？实际上确实如此，但是 Rust 中出色的 `memchr` 库隐藏了复杂度，并为我们提供了比上面的手工代码更高层次的接口，使用起来更容易，速度也更快。
+
+由于没有其他的改动，我只是将主代码放在一个循环中：
 
 
+```rust
+loop {
+    let n = reader.read(&mut buf)?;
+    if n == 0 { return Ok(()); }
+    let mut start = 0;
+
+    while start < n {
+        // Finds the index of the next terminator in the buffer,
+        // checking a chunk of buffer in parallel if possible.
+        match memchr(terminator, &buf[start..n]) {
+            Some(offset) => {
+                writer.write_all(&buf[start..=start + offset])?;
+                writer.write_u8(b'\n')?;
+                start = start + offset + 1;
+            }
+            None => {
+                writer.write_all(&buf[start..])?;
+                break;
+            }
+        }
+    }
+}
+```
+
+具体快多少呢？使用这种更好的代码将会在 1.01 秒内处理相同大小的文件。
+
+实际上，我们还咩有处理换行，不幸的是，这使得代码更加复杂，因为它引入了一些棘手的临界的情况。问题是，我们可能使用终止符作为缓冲区最后一个字符，然后在下一次读取缓冲区时使用一些列换行符作为开始的几个字符。这会使状况有点糟糕，但并没有影响性能，所以这次就讲到这里！如果你堆带有换行和错误处理的完整代码感兴趣，可以[在 GitHub](https://github.com/clarkema/x12pp/blob/master/src/main.rs) 上查看代码。
+
+## 结语
+让我们回顾一下不同的处理方法，使用相同的 1.3GB 大小的文件测试
+
+| 方法        | 耗时   | 
+| --------   | :-----:  |
+| `perl -le '$/="~";print $_, "~" while <>'`     | 6.25s |
+| `sed -e 's/~/~\n/g'`        |   7.25s   | 
+| `awk 'BEGIN{RS="~";OFS=""}{print $0, RS}'`        |    7.54s   | 
+| Aho-Corasick        |    1.68s   | 
+| 简单地手动循环字符        |    13s   | 
+| 缓冲区统一写        |    1.75s   | 
+| 使用 `memchr` 类似的方式        |   1.01s   | 
+
+我们能够力压通用的一些方法并不奇怪 —— 这是一个不公平的比较，因为我们所做的优化要少的多。
+
+一般来说，只要你愿意在编写、调试相当多的代码和处理过程中突然出现的临界情况之间进行权衡，那么对于一个特定的用例，几乎总是可能胜过通用的方法的。
+
+真正的问题是它是否值得在任何特定的情况下花费时间和精力；`sed` 和 `perl` 替代方案都是快速而简单的一行程序，你可以轻松的编写它们。GNU `awk` 的完整版本只有 14 行，包含了我所需要的所有特性，包括终止符检测和换行处理。Rust 版本大约有 100 行代码（其中一些代码处理 CLI 选项和文件处理），在我得到最终的版本之前，它花费了大量的时间和实验。
+
+最终的代码可以在 [GitHub](https://github.com/clarkema/x12pp) 上找到，这正是我想要的；它给我一个简单、快速的方法 —— 将 X12 文件分割成小段的方法，用于快速检查或进一步的处理。
