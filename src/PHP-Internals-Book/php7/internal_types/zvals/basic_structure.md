@@ -4,7 +4,7 @@
 >* 原文仓库：https://github.com/phpinternalsbook/PHP-Internals-Book
 >* 原文作者：[phpinternalsbook](https://github.com/phpinternalsbook/PHP-Internals-Book)
 >* 译文出自：https://github.com/suhanyujie
->* 本文永久链接：
+>* 本文永久链接：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/PHP-Internals-Book/php7/internal_types/zvals/basic_structure.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
 
