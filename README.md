@@ -15,6 +15,6 @@
 #### 进度
 * internal_types
     * zvals
-        * [basic_structure](./php7/internal_types/zvals/basic_structure.md)
+        * [basic_structure](./src/PHP-Internals-Book/php7/internal_types/zvals/basic_structure.md)
 
 ### [PHP-Parser-doc](./src/PHP-Parser-doc)
