@@ -7,5 +7,14 @@
 * [【译】学习写解析器组合器](src/2019/Learning-Parser-Combinators-With-Rust.md)
 * [【译】用`Wasmer`进行插件开发](src/using_wasmer_for_plugins)
 
-## 一些软件包文档
-* [PHP-Parser-doc](./src/PHP-Parser-doc)
+## 一些文档翻译
+### PHP7 内核 [PHP Internals Book](./src/PHP-Internals-Book)
+#### 翻译招募
+* 内容篇幅多，希望有志之士一同参与翻译。有意向请提 issue 告知。谢谢！
+
+#### 进度
+* internal_types
+    * zvals
+        * [basic_structure](./php7/internal_types/zvals/basic_structure.md)
+
+### [PHP-Parser-doc](./src/PHP-Parser-doc)
