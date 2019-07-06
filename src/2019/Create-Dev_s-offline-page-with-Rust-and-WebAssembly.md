@@ -1,4 +1,3 @@
-# Create Dev's offline page with Rust and WebAssembly 🦄💡✨
 # 【译】使用 Rust 和 WebAssembly 构建离线画图页面
 
 >* 原文地址：https://dev.to/sendilkumarn/create-dev-s-offline-page-with-rust-and-webassembly-21gn
@@ -9,23 +8,23 @@
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
 
-Dev's [offline page](https://dev.to/offline) is fun. Can we do that with Rust and WebAssembly?
+Dev 网站的[离线画图页](https://dev.to/offline)很有趣。我们能用 Rust 和 WebAssembly 来实现吗？
 
-The answer is yes. Let us do it.
+答案是肯定的。让我们现在就来实现它。
 
-First, we will create a simple Rust and WebAssembly application with Webpack.
+首先，我们通过 Webpack 创建了一个基于 Rust 和 WebAssembly 的简单应用。
 
 ```shell
 npm init rust-webpack dev-offline-canvas
 ```
 
-The Rust and WebAssembly ecosystem provides `web_sys` that provides the necessary binding over the Web APIs. Check it out [here](https://rustwasm.github.io/wasm-bindgen/api/web_sys/).
+Rust 和 WebAssembly 生态提供了 `web_sys`，它在 Web API 上提供了很多需要的绑定。可以从[这里]((https://rustwasm.github.io/wasm-bindgen/api/web_sys/))检出。
 
-The sample application already has `web_sys` dependency. The `web_sys` crate includes all the available WebAPI bindings.
+示例应用已经引入了 `web_sys` 依赖。`web_sys` crate 中包含了所有可用的 WebAPI 绑定。
 
->Including all the WebAPI bindings will increase the binding file size. It is very important to include only the APIs that we need.
+>如果引入所有的 WebAPI 绑定将会增加绑定文件的大小。按需引入必要的 API 是比较重要的。
 
-We will remove the existing feature
+我们移除已经存在的 feature 列表（位于 toml 文件中）
 
 ```toml
 features = [
@@ -33,7 +32,7 @@ features = [
 ]
 ```
 
-and replace it with the following:
+并使用下面的替代：
 
 ```toml
 features = [
@@ -50,12 +49,12 @@ features = [
 ]
 ```
 
-The above list of features is the entire set of features that we will be using in this example.
+上面的 features 列表是我们将在本例中需要使用的一些 features。
 
-## Lets write some Rust
-Open the `src/lib.rs`.
+## 开始写段 Rust 代码
+打开文件 `src/lib.rs`。
 
-replace the `start()` function with the following:
+使用下面的代码替换掉文件中的 `start()` 函数： 
 
 ```rust
 #[wasm_bindgen(start)]
@@ -65,21 +64,21 @@ pub fn start() -> Result<(), JsValue> {
 }
 ```
 
-The `#[wasm_bindgen(start)]` calls this function as soon as the WebAssembly Module is instantiated. Check out more about the start function in the spec [here](https://github.com/WebAssembly/design/blob/master/Modules.md#module-start-function).
+一旦实例化了 WebAssembly 模块，`#[wasm_bindgen(start)]` 就会调用这个函数。可以查看规范中关于 start 函数的[详细信息](https://github.com/WebAssembly/design/blob/master/Modules.md#module-start-function)。
 
-We will get the `window` object in the Rust.
+我们在 Rust 中将得到 `window` 对象。
 
 ```rust
 let window = web_sys::window().expect("should have a window in this context");
 ```
 
-Then get the document from the `window` object.
+接着从 `window` 对象中获取 document。
 
 ```rust
 let document = window.document().expect("window should have a document");
 ```
 
-Create a Canvas element and append it to the document.
+创建一个 Canvas 元素，将其插入到 document 中。
 
 ```rust
 let canvas = document
@@ -89,7 +88,7 @@ let canvas = document
 document.body().unwrap().append_child(&canvas)?;
 ```
 
-Set width, height, and the border for the canvas element.
+设置 canvas 元素的宽、高和边框。
 
 ```rust
 canvas.set_width(640);
@@ -97,17 +96,17 @@ canvas.set_height(480);
 canvas.style().set_property("border", "solid")?;
 ```
 
-In the Rust, the memories are discarded once the execution goes out of context or when the method returns any value. But in JavaScript, the `window`, `document` is alive as long as the page is up and running.
+在 Rust 中，一旦离开当前上下文或者函数已经 return，对应的内存就会被释放。但在 JavaScript 中，`window`, `document` 在页面的启动和运行时都是活动的（位于生命周期中）。
 
-So it is important to create a reference for the memory and make it live statically until the program is completely shut down.
+因此，为内存创建一个引用并使其静态化，直到程序运行结束，这一点很重要。
 
-Get the Canvas' rendering context and create a wrapper around it in order to preserve its lifetime.
+获取 Canvas 渲染的上下文，并在其外层包装一个 wrapper，以保证它的生命周期。
 
-`RC` stands for `Reference Counted`.
+`RC` 表示 `Reference Counted`。
 
-The type Rc provides shared ownership of a value of type T, allocated in the heap. Invoking clone on Rc produces a new pointer to the same value in the heap. When the last Rc pointer to a given value is destroyed, the pointed-to value is also destroyed. - [RC docs](https://doc.rust-lang.org/std/rc/struct.Rc.html)
+Rc 类型提供在堆中分配类型为 T 的值，并共享其所有权。在 Rc 上调用 clone 会生成指向堆中相同值的新的指针。当指向给定值的最后一个 Rc 指针即将被释放时，它指向的值也将被释放。 —— [RC 文档](https://doc.rust-lang.org/std/rc/struct.Rc.html)
 
-This reference is cloned and used for callback methods.
+这个引用被 clone 并用于回调方法。
 
 ```rust
 let context = canvas
@@ -119,12 +118,13 @@ let context = Rc::new(context);
 ```
 
 Since we are going to capture the mouse events. We will create a boolean variable called `pressed`. The `pressed` will hold the current value of `mouse click`.
+因为我们要响应 mouse 事件。因此我们将创建一个名为 `pressed` 的布尔类型的变量。`pressed` 用于保存 `mouse click`（鼠标点击）的当前值。
 
 ```rust
 let pressed = Rc::new(Cell::new(false));
 ```
 
-Now we need to create a closure (call back function) for `mouseDown` | `mouseUp` | `mouseMove`.
+现在，我们需要为 `mouseDown`、`mouseUp`、`mouseMove` 创建一个闭包（回调函数）。
 
 ```rust
 { mouse_down(&context, &pressed, &canvas); }
@@ -132,7 +132,7 @@ Now we need to create a closure (call back function) for `mouseDown` | `mouseUp`
 { mouse_up(&context, &pressed, &canvas); }
 ```
 
-We will define the actions that we need to do during those events as separate functions. These functions take the context of the Canvas element and pressed status.
+我们将把这些事件触发时需要执行的操作定义为独立的函数。这些函数接收 canvas 元素的上下文和鼠标按下状态作为参数。
 
 ```rust
 fn mouse_up(context: &std::rc::Rc<web_sys::CanvasRenderingContext2d>, pressed: &std::rc::Rc<std::cell::Cell<bool>>, canvas: &web_sys::HtmlCanvasElement) {
@@ -177,16 +177,16 @@ fn mouse_down(context: &std::rc::Rc<web_sys::CanvasRenderingContext2d>, pressed:
 }
 ```
 
-They are very similar to how your `JavaScript` API will look like but they are written in Rust.
+他们非常类似于你平时写的 `JavaScript` 的 API，但它们是用 Rust 编写的。
 
-Now we are all set. We can run the application and draw inside the canvas. 🎉 🎉 🎉
+现在我们都设置好了。我们可以运行应用程序并在画布中画画。 🎉 🎉 🎉
 
-But we do not have any colours.
+但我们还没有设定颜色。
 
-## Lets add some colours.
-To add the colour swatches. Create a list of divs and use them as a selector.
+## 添加多个颜色
+增加颜色样本，创建一个 div 列表，并使用它们作为颜色选择器。
 
-Define the list of colours that we need to add inside the `start` program.
+在 `start` 函数中定义我们需要的颜色列表。
 
 ```rust
 #[wasm_bindgen(start)]
@@ -198,7 +198,7 @@ pub fn start() -> Result<(), JsValue> {
 }
 ```
 
-Then run through the list and create a div for all the colours and append it to the document. For every div add an `onClick` handler too to change the colour.
+然后遍历颜色列表，为所有颜色创建一个 div，并将其加入到 document 中。对于每个 div，还需要添加一个 `onClick` 处理程序来更改画板颜色。
 
 ```rust
 for c in colors {
@@ -216,7 +216,7 @@ for c in colors {
 }
 ```
 
-The click hander is as follows:
+其中 click 函数实现如下所示：
 
 ```rust
 fn click(context: &std::rc::Rc<web_sys::CanvasRenderingContext2d>, div: &web_sys::HtmlElement, c: &str) {
@@ -231,7 +231,7 @@ fn click(context: &std::rc::Rc<web_sys::CanvasRenderingContext2d>, div: &web_sys
 }
 ```
 
-Now a little beautification. Open the `static/index.html` and add the style for the colour div.
+现在稍微美化一下。打开 `static/index.html` 文件。在其中添加 div 样式。
 
 ```css
 <style>
@@ -246,15 +246,14 @@ Now a little beautification. Open the `static/index.html` and add the style for 
  </style>
 ```
 
-That is it, we have created the application. 🎉
+这就是我们的画板了，我们已经创建好了这个应用。🎉
 
-Check out the demo application available [here](https://github.com/sendilkumarn/draw-page).
+可以从[这里](https://github.com/sendilkumarn/draw-page)检出示例应用。
 
-I hope this gives you a motivation to start your awesome WebAssembly journey. If you have any questions/suggestions/feel that I missed something feel free to add a comment.
+希望这个例子能给你开启美妙的 WebAssembly 旅程带来灵感。如果你有任何的问题、建议、感受，欢迎给我留言评论。
 
-You can follow me on [Twitter](https://twitter.com/sendilkumarn).
+你可以在 [Twitter](https://twitter.com/sendilkumarn) 关注我。
 
-If you like this article, please leave a like or a comment. ❤️ for the [article](https://dev.to/aspittel/how-to-create-the-drawing-interaction-on-dev-s-offline-page-1mbe).
+如果你喜欢这个文章，请给这个[文章](https://dev.to/aspittel/how-to-create-the-drawing-interaction-on-dev-s-offline-page-1mbe)点赞或留言。❤️ 
 
-Check out my more WebAssembly articles [here](https://dev.to/sendilkumarn/increase-rust-and-webassembly-performance-382h).
-
+还可以阅读我的其他 WebAssembly 文章，[点击这儿](https://dev.to/sendilkumarn/increase-rust-and-webassembly-performance-382h)。
