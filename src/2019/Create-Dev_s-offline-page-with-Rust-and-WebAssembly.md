@@ -7,6 +7,7 @@
 >* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
+>* 文中的页面效果可以参考这里：[离线画图页](https://dev.to/offline)
 
 Dev 网站的[离线画图页](https://dev.to/offline)很有趣。我们能用 Rust 和 WebAssembly 来实现吗？
 
@@ -18,11 +19,11 @@ Dev 网站的[离线画图页](https://dev.to/offline)很有趣。我们能用 R
 npm init rust-webpack dev-offline-canvas
 ```
 
-Rust 和 WebAssembly 生态提供了 `web_sys`，它在 Web API 上提供了很多需要的绑定。可以从[这里]((https://rustwasm.github.io/wasm-bindgen/api/web_sys/))检出。
+Rust 和 WebAssembly 生态提供了 `web_sys`，它在 Web API 上提供了很多需要的绑定。可以从[这里]((https://rustwasm.github.io/wasm-bindgen/api/web_sys/))查看。
 
 示例应用已经引入了 `web_sys` 依赖。`web_sys` crate 中包含了所有可用的 WebAPI 绑定。
 
->如果引入所有的 WebAPI 绑定将会增加绑定文件的大小。按需引入必要的 API 是比较重要的。
+>如果引入所有的 WebAPI 绑定将会增加绑定文件的大小。按需引入必 API 是比较重要的。
 
 我们移除已经存在的 feature 列表（位于 toml 文件中）
 
@@ -51,7 +52,7 @@ features = [
 
 上面的 features 列表是我们将在本例中需要使用的一些 features。
 
-## 开始写段 Rust 代码
+## 开始写 Rust 代码
 打开文件 `src/lib.rs`。
 
 使用下面的代码替换掉文件中的 `start()` 函数： 
@@ -117,7 +118,6 @@ let context = canvas
 let context = Rc::new(context);
 ```
 
-Since we are going to capture the mouse events. We will create a boolean variable called `pressed`. The `pressed` will hold the current value of `mouse click`.
 因为我们要响应 mouse 事件。因此我们将创建一个名为 `pressed` 的布尔类型的变量。`pressed` 用于保存 `mouse click`（鼠标点击）的当前值。
 
 ```rust
