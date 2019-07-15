@@ -1,4 +1,4 @@
-# 【译】php-ext-wasm：从 wasmi 到 Wasmer
+# 【译】php-ext-wasm：从 wasmi 迁移到 Wasmer
 >php-ext-wasm: Migrating from wasmi to Wasmer 译文
 
 >* 原文地址：https://medium.com/wasmer/php-ext-wasm-migrating-from-wasmi-to-wasmer-4d1014f41c88
@@ -10,13 +10,13 @@
 >* 翻译不当之处，还请指出，谢谢！
 >* 这是一个 PHP 扩展相关的文章，结合了 Rust WebAssembly PHP 等前沿的技术，旨在给开发者更多的参考和思路。
 
->导读：How php-ext-wasm has migrated from wasmi to Wasmer and now enjoys a 29x speedup, is faster than PHP itself, and is closer to native speed.
+>导读：php-ext-wasm 是如何从 wasmi 迁移到 Wasmer 并提高了 29 倍的速度，比原生的 PHP 更快，并且接近于机器码的速度。
 
-First as a joke, now as a real product, I started to develop [`php-ext-wasm`](https://github.com/wasmerio/php-ext-wasm): a PHP extension allowing to execute [WebAssembly](https://webassembly.org/) binaries.
+开头我开了一个玩笑，现在我开始将 [`php-ext-wasm`](https://github.com/wasmerio/php-ext-wasm) 作为一个真正的产品来开发：一个可以执行 [WebAssembly](https://webassembly.org/) 二进制文件的 PHP 扩展。
 
-The PHP virtual machine (VM) is [Zend Engine](https://github.com/php/php-src/). To write an extension, one needs to develop in C or C++. The extension was simple C bindings to a Rust library I also wrote. At that time, this Rust library was using [wasmi](https://github.com/paritytech/wasmi) for the WebAssembly VM. I knew that `wasmi` wasn’t the fastest WebAssembly VM in the game, but the API is solid, well-tested, it compiles quickly, and is easy to hack. All the requirements to start a project!
+PHP 虚拟机（VM）即 [Zend Engine](https://github.com/php/php-src/)。要编写扩展，需要使用 C 或者 C++ 进行开发。扩展是 Rust 实现的简单的 C 绑定库。当时，这个 Rust 库使用 [wasmi](https://github.com/paritytech/wasmi) 作为 WebAssembly 的虚拟机。我知道 `wasmi` 不是这个场景中最快的 WebAssembly 虚拟机，但它的 API 是可靠的、经过测试的、编译速度快，并且易于 hack。基于这些，我们开始写一个项目吧!
 
-After 6 hours of development, I got something working. I was able to run the following PHP program:
+经过 6 小时的开发，我得到了一些有用的东西。可以运行以下 PHP 程序：
 
 ```php
 <?php
@@ -25,7 +25,7 @@ $result = $instance->sum(1, 2);
 var_dump($result); // int(3)
 ```
 
-The API is straightforward: create an instance (here of `simple.wasm`), then call functions on it (here `sum` with 1 and 2 as arguments). PHP values are transformed into WebAssembly values automatically. For the record, here is the `simple.rs` Rust program that is compiled to a WebAssembly binary:
+API 很简单：创建一个实例（这里是 `simple.wasm`），然后调用它的函数（这里的 `sum`，参数是 1 和 2）。PHP 值将被自动转换为 WebAssembly 中的值。郑重声明，以下是 Rust 程序文件 `simple.rs`，它被编译为一个 WebAssembly 二进制文件：
 
 ```rust
 #[no_mangle]
@@ -34,52 +34,52 @@ pub extern fn sum(x: i32, y: i32) -> i32 {
 }
 ```
 
-It was great! 6 hours is a relatively small number of hours to go that far according to me.
+太棒了！在我看来，6 小时能得到这样的成果还是很划算的。
 
-However, I quickly noticed that `wasmi` is… slow. [One of the promise of WebAssembly](https://webassembly.org/) is:
+然而，我很快就注意到 `wasmi` 很慢。[WebAssembly 的优势]((https://webassembly.org/))之一是：
 
->WebAssembly aims to execute at native speed by taking advantage of [common hardware capabilities](https://webassembly.org/docs/portability/#assumptions-for-efficient-execution) available on a wide range of platforms.
+>WebAssembly 旨在充分利用广泛平台上可用的[共用硬件功能](https://webassembly.org/docs/portability/#assumptions-for-efficient-execution)以机器码的速度执行程序。
 
-And clearly, my extension wasn’t fulfilling this promise. Let’s see a basic comparison with a benchmark.
+很明显，我的扩展没有这个优势。让我们看看基准测试比较。
 
-I chose the [n-body algorithm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/description/nbody.html) from [the Computer Language Benchmarks Game](https://benchmarksgame-team.pages.debian.net/benchmarksgame/) from Debian, mostly because it’s relatively CPU intensive. Also, the algorithm has a simple interface: based on an integer, it returns a floating-point number; this API doesn’t involve any advanced instance memory API, which is perfect to test a proof-of-concept.
+我从 Debian 的[计算机语言基准测试游戏](https://benchmarksgame-team.pages.debian.net/benchmarksgame/)中选择了 [n-body 算法](https://benchmarksgame-team.pages.debian.net/benchmarksgame/description/nbody.html)。并且相对来讲，它属于 CPU 密集型算法。该算法具有简单的接口：基于整数返回浮点数；这个 API 不涉及任何高级实例的内存 API，这对于测试一个“概念验证”来说是很好的。
 
-As a baseline, I’ve run the n-body algorithm [written in Rust](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-rust-7.html), let’s call it `rust-baseline`. The same algorithm has been [written in PHP](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-php-3.html), let’s call it `php`. Finally, the algorithm has been compiled from Rust to WebAssembly, and executed with the `php-ext-wasm` extension, let’s call that case `php+wasmi`. All results are for `nbody(5000000)`:
+作为参考，我运行了 n-body 算法[ Rust 编写](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-rust-7.html)，我们称之为 `rust-baseline`。同样的算法[用 PHP 实现](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-php-3.html)，我们称之为 `php`。最后，将算法从 Rust 编译为 WebAssembly，并使用 `php-ext-wasm` 扩展执行，我们暂且将这种场景称为 `php+wasmi`。所有测试都是基于 `nbody(5000000)`：
 
 * `rust-baseline`: 287ms,
 * `php`: 19,761ms,
 * `php+wasmi`: 67,622ms.
 
-OK, so… `php-ext-wasm` with `wasmi` is 3.4 times slower than PHP itself, it is pointless to use WebAssembly in such conditions!
+好的，那么…… 使用 `wasmi` 的 `php-ext-wasm` 比原生 PHP 慢 3.4 倍，对于这种低性能的结果来说，使用 WebAssembly 是没有意义的。
 
-It confirms my first intuition though: In our case, `wasmi` is really great to mock something up, but it’s not fast enough for our expectations.
+不过，它证实了我的第一直觉：早我们的例子中，`wasmi` 确实可以很好的模拟一些东西，但它还不够快，不符合我们的预期。
 
-## Faster, faster, faster…
-I wanted to use [Cranelift](https://github.com/CraneStation/cranelift) since the beginning. It’s a code generator, à la [LLVM](http://llvm.org/) (excuse the brutal shortcut, the goal isn’t to explain what Cranelift is in details, but that’s a really awesome project!). To quote the project itself:
+## 再快写些，再快写些，再快写些……
+从一开始我就想使用 [Cranelift](https://github.com/CraneStation/cranelift)。它是一个代码生成器，类似于 [LLVM](http://llvm.org/)（别介意我用这种简写，我们的目标不是详细解释 Cranelift，但它确实是一个很好的项目！）引用项目本身的描述：
 
->Cranelift is a low-level retargetable code generator. It translates a [target-independent intermediate representation](https://cranelift.readthedocs.io/en/latest/ir.html) into executable machine code.
+>Cranelift 是一个底层的可重定向的代码生成器。它将[与目标无关的中间表示形式]转换为可执行的机器码。
 
-It basically means that the Cranelift API can be used to generate executable code.
+这基本上意味着可以使用 Cranelift API 生成可执行代码。
 
-It’s perfect! I can replace `wasmi` by Cranelift, and boom, profit. But… there is other ways to get even faster code execution — at the cost of a longer code compilation though.
+这个方案很不错！基于 Cranelift 带来的好处,我可以用它替换 `wasmi`。但是，还有其他方法可以获得更快的代码执行速度 —— 但代价是需要更长的时间编译和调试代码。
 
-For instance, LLVM can provide a very fast code execution, almost at native speed. Or we can generate assembly code dynamically. Well, there is multiple ways to achieve that. What if a project could provide a WebAssembly virtual machine with multiple backends?
+例如，LLVM 可以提供非常快的代码执行速度，几乎可以达到机器码的执行速度。或者我们可以动态生成汇编代码。有很多方法可以做到这一点。假如一个项目可以提供一个具有多个后端 WebAssembly 虚拟机的方法，该怎么办？
 
-## Enter Wasmer
-And it was at that specific time that I’ve been hired by [Wasmer](https://github.com/wasmerio/wasmer). To be totally honest, I was looking at Wasmer a few weeks before. It was a surprise and a great opportunity for me. Well, the universe really wants this rewrite from wasmi to `Wasmer`, right 😅?
+## 进入 Wasmer
+就在那个时候，我被 [Wasmer](https://github.com/wasmerio/wasmer) 录用了。说实话，几周前我还在关注 Wasmer 呢。这对我来说是惊喜，也是非常好的机会。大家都希望从 wasmi 到 `Wasmer` 进行重写，是吗 😅？
 
-Wasmer is organized as a set of Rust libraries (called crates). There is even a `wasmer-runtime-c-api` crate which is a C and a C++ API on top of the `wasmer-runtime` crate and the `wasmer-runtime-core` crate, i.e. it allows running the WebAssembly virtual machine as you want, with the backend of your choice: Cranelift, LLVM, or Dynasm (at the time of writing). That’s perfect, it removes my Rust library between the PHP extension and `wasmi`. Then `php-ext-wasm` is reduced to a PHP extension without any Rust code, everything goes to `wasmer-runtime-c-api`. That’s sad to remove Rust from this project, but it relies on more Rust code!
+Wasmer 是一些 Rust 库（叫做 crate）组成的。甚至有一个 `wasmer-runtime-c-api` crate 是用 C 和 C++ API 并基于 `wasmer-runtime` crate 和 `wasmer-runtime-core` crate 来实现的。它可以运行 WebAssembly 虚拟机，后端的可选择方案是：Cranelift，LLVM，或者 Dynasm（在撰写本文时发现的）。很好，它在 PHP 扩展和 `wasmi` 之间移除了我的 Rust 库。`php-ext-wasm` 被简化为一个不带有 Rust 代码的 PHP 扩展，所有问题都转向了 `wasmer-runtime-c-api`。这个项目中移除了 Rust 比较令人遗憾，但它依赖了更多其他的 Rust 代码！
 
-Counting the time to make some patches on `wasmer-runtime-c-api`, I’ve been able to migrate `php-ext-wasm` to Wasmer in 5 days.
+在给 `wasmer-runtime-c-api` 打补丁时估算了一下时间，我差不多能够在 5 天内将 `php-ext-wasm` 迁移到 Wasmer。
 
-By default, `php-ext-wasm` uses Wasmer with the Cranelift backend, it does a great balance between compilation and execution time. It is really good. Let’s run the benchmark, with the addition of `php+wasmer(cranelift)`:
+默认情况下，`php-ext-wasm` 使用 Wasmer 和 Cranelift 后端，它在编译和执行时间之间取得了平衡。很棒！我们加上 `php+wasmer(cranelift)` 方案，然后进行基准测试：
 
 * `rust-baseline`: 287ms,
 * `php`: 19,761ms,
 * `php+wasmi`: 67,622ms,
 * `php+wasmer(cranelift)`: 2,365ms 🎉.
 
-Finally, the PHP extension provides a faster execution than PHP itself! `php+wasmer(cranelift)` is 8.6 times faster than `php` to be exact. And it is 28.6 times faster than `php+wasmi`. Can we reach the native speed (represented by `rust-baseline` here)? It’s very likely with LLVM. That’s for another article. I’m super happy with Cranelift for the moment. (See [our previous blog post to learn how we benchmark different backends in Wasmer, and other WebAssembly runtimes](https://medium.com/wasmer/benchmarking-webassembly-runtimes-18497ce0d76e)).
+最后，PHP 扩展的方案的测试结果显示性能比原生 PHP 代码更好！`php+wasmer(cranelift)` 很明显比 `php` 快 8.6 倍。比 `php+wasmi` 快 28.6 倍。有方案能达到机器码速度（这里代表 `rust-baseline`）吗？很有可能是 LLVM。这是另一篇文章的内容。我现在很高兴使用了 Cranelift。（看[我们之前的博客文章，了解如何在 Wasmer 和其他 WebAssembly 运行时测试不同的后端](https://medium.com/wasmer/benchmarking-webassembly-runtimes-18497ce0d76e)。）
 
 ## More Optimizations
 Wasmer provides more features, like module caching. Those features are now included in the PHP extension. When booting the `nbody.wasm` file (19kb), it took 4.2ms. By booting, I mean: reading the WebAssembly binary from a file, parsing it, validating it, compiling it to executable code and a WebAssembly module structure.
