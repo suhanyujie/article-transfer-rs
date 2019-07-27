@@ -8,7 +8,7 @@
 
 A command line interface(CLI) program runs on the terminal, which means there is no graphic interface, aka none-GUI.
 
-Actually, we use CLI every day, such as ls, ps, top, etc. There is also a awesome-cli-apps collects many good CLI program. You can take a look. I recommend exa, A modern version of ‘ls’ written in Rust.
+Actually, we use CLI every day, such as `ls`, `ps`, `top`, etc. There is also a [awesome-cli-apps](https://github.com/agarrharr/awesome-cli-apps) collects many good CLI program. You can take a look. I recommend [exa](https://github.com/ogham/exa), A modern version of ‘ls’ written in Rust.
 
 ![](./images07/68747470733a2f2f7261772e67697468756275736572636f6e74656e742e636f6d2f6f6768616d2f6578612f6d61737465722f73637265656e73686f74732e706e67.png)
 
@@ -19,9 +19,9 @@ A CLI program would look like:
 $ ./program_name [arguments] [flags] [options]
 ```
 
-Usually we could add -h or --help to see the information.
+Usually we could add `-h` or `--help` to see the information.
 
-Take the cargo program for example:
+Take the `cargo` program for example:
 
 ```shell
 $ cargo -h
@@ -61,17 +61,19 @@ Some common cargo commands are (see all commands with --list):
 See 'cargo help <command>' for more information on a specific command.
 ```
 
-Now you will know how to use cargo.
+Now you will know how to use `cargo`.
 
 ## Create project
 Let's start to build a new CLI program!
 
-I name the project meow here.
+I name the project `meow` here.
 
 ```shell
 $ cargo new meow
 $ cd meow
 ```
+
+`cargo` will help you create a new project.
 
 ## Arguments
 As we have seen how a CLI would be, there are usually arguments for a CLI.
@@ -106,16 +108,16 @@ So the naive way is inconvenient to use.
 - arguments might have default value
 - flags would exchange positions
 - options would exchange positions
-- arg1 might binds arg2
+- `arg1` might binds `arg2`
 
 So, we need a crate to help us do this job easily.
 
 ### Clap
-Clap is a full featured, fast Command Line Argument Parser for Rust.
+[Clap](https://github.com/clap-rs/clap) is a full featured, fast Command Line Argument Parser for Rust.
 
 How to use it?
 
-First, create a cli.yml file, which is the setting for arguments. It looks like:
+First, create a `cli.yml` file, which is the setting for arguments. It looks like:
 
 ```yml
 <!--  cli.yml -->
@@ -149,7 +151,7 @@ subcommands:
                 help: print debug information
 ```
 
-Then we add the following code in main.rs
+Then we add the following code in `main.rs`
 
 ```rust
 #[macro_use]
@@ -169,9 +171,9 @@ fn main() {
 }
 ```
 
-The clap crate will load and parse the yml, and we can use the arguments in the program.
+The `clap` crate will load and parse the yml, and we can use the arguments in the program.
 
-The running result of the program with the cli.yml above with -h is:
+The running result of the program with the `cli.yml` above with `-h` is:
 
 ```shell
 $ meow -h
@@ -201,9 +203,9 @@ SUBCOMMANDS:
 Very convenient. Isn't it?
 
 ## Configuration
-A CLI will also need configuration. Some parameters should be determined before run time and they are record in the configuration file, which usally is .env, .config, .setting.
+A CLI will also need configuration. Some parameters should be determined before run time and they are record in the configuration file, which usally is `.env`, `.config`, `.setting`.
 
-For example, a .env file:
+For example, a `.env` file:
 
 ```env
 PORT = 8000
@@ -215,16 +217,16 @@ AREA = "Taipei"
 
 you could write by hands
 
-* read file .env
-* split \n
-* split = and add data to HashMap
+* read file `.env`
+* split `\n`
+* split `=` and add data to `HashMap`
 
 or use a crate.
 
 ### dotenv_codegen
-dotenv_codegen is a simple .env configuration parser with macro.
+[dotenv_codegen](https://crates.io/crates/dotenv_codegen) is a simple `.env` configuration parser with macro.
 
-The crate reads .env. It is esay to use.
+The crate reads `.env`. It is esay to use.
 
 ```rust
 fn main() {
@@ -233,7 +235,7 @@ fn main() {
 ```
 
 ## Environment Variables
-You might also want to call the environment variable in the system, such as JAVA_HOME.
+You might also want to call the environment variable in the system, such as `JAVA_HOME`.
 
 ```rust
 use std::env;
@@ -246,7 +248,7 @@ match env::var_os(key) {
 ```
 
 ## Error handling
-Erro handling is also important. We don't want the program always panic! and shut down the program when it encounter an error. Sometimes, the errors don't matter too much, so we can handle them without break the program, such as running againg or adopting another rule when there is an error.
+Erro handling is also important. We don't want the program always `panic!` and shut down the program when it encounter an error. Sometimes, the errors don't matter too much, so we can handle them without break the program, such as running againg or adopting another rule when there is an error.
 
 ### panic
 ```rust
@@ -260,7 +262,7 @@ Simple but powerless.
 * better use in script
 
 ### Result
-Result pass the error without crash. If the function breaks, it will return Error with error type. Then we can decide what to do next according to the type, such as "retry" or "give up".
+`Result` pass the error without crash. If the function breaks, it will return `Error` with error type. Then we can decide what to do next according to the type, such as "retry" or "give up".
 
 ```rust
 enum MyErr {
@@ -284,7 +286,7 @@ fn hoo() {
 ```
 
 ### Error Message
-You might want to print or use the error message of the error type. You need to impl the fmt for MyErr, so that it will have its own error message.
+You might want to print or use the error message of the error type. You need to `impl` the `fmt` for `MyErr`, so that it will have its own error message.
 
 ```rust
 enum MyErr {
@@ -311,13 +313,17 @@ Err(e) => println!("{}", e)
 ## Standard error
 There are standard output and standard error in the system.
 
-println!() is the standard output, and eprintln!() is the standard error.
+`println!()` is the standard output, and `eprintln!()` is the standard error.
 
 For example:
 
 ```shell
 $ cargo run > output.txt
 ```
+
+The standard output stream will be redirected to the file `output.txt` only.
+
+So, if we don't want to write error messages in log files, we can use `eprintln!()` to show error as the stand error.
 
 ## Exit Code
 none-zero code lets other programs know it failed.
