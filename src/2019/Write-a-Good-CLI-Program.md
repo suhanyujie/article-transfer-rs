@@ -1,4 +1,4 @@
-# 写好 CLI 程序
+# 写个好的 CLI 程序
 >* Write a Good CLI Program 译文
 
 >* 原文链接：https://qiita.com/tigercosmos/items/678f39b1209e60843cc3
@@ -259,7 +259,7 @@ panic!("this is panic");
 
 * 直接退出程序
 * 退出时，不指定错误码
-* 在脚本中更好地使用
+* 以脚本的方式使用
 
 ### Result
 `Result` 在没有崩溃的情况下传递错误。如果函数中断，它将返回 `Error` 并带有错误类型信息。然后我们根据类型决定下一步做什么，如“重试”，或者“放弃”。
