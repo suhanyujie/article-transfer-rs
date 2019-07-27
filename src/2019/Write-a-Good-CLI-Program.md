@@ -6,22 +6,22 @@
 >* 译文出处：https://www.github.com/suhanyujie
 >* 译者：[suhanyujie](https://www.github.com/suhanyujie)
 
-A command line interface(CLI) program runs on the terminal, which means there is no graphic interface, aka none-GUI.
+命令行接口程序（CLI）是运行在终端的，这也就意味着没有图形界面，即 none-GUI
 
-Actually, we use CLI every day, such as `ls`, `ps`, `top`, etc. There is also a [awesome-cli-apps](https://github.com/agarrharr/awesome-cli-apps) collects many good CLI program. You can take a look. I recommend [exa](https://github.com/ogham/exa), A modern version of ‘ls’ written in Rust.
+事实上，我们每天都会使用 CLI，例如 `ls`、`ps`、`top` 等。有一个[很棒的 cli 应用列表](https://github.com/agarrharr/awesome-cli-apps)，它收集了很多好的 CLI 程序。你可以看一下。我推荐 [exa](https://github.com/ogham/exa)，它是一个用 Rust 版的‘ls’程序。
 
 ![](./images07/68747470733a2f2f7261772e67697468756275736572636f6e74656e742e636f6d2f6f6768616d2f6578612f6d61737465722f73637265656e73686f74732e706e67.png)
 
-## A CLI program
-A CLI program would look like:
+## CLI 程序
+CLI 程序使用起来跟下面类似：
 
 ```shell
 $ ./program_name [arguments] [flags] [options]
 ```
 
-Usually we could add `-h` or `--help` to see the information.
+一般我们可以通过 `-h` 和 `--help` 参数看到相关信息。
 
-Take the `cargo` program for example:
+以 `cargo` 程序为例：
 
 ```shell
 $ cargo -h
@@ -61,24 +61,24 @@ Some common cargo commands are (see all commands with --list):
 See 'cargo help <command>' for more information on a specific command.
 ```
 
-Now you will know how to use `cargo`.
+现在你应该知道怎样去使用 `cargo` 了。
 
-## Create project
-Let's start to build a new CLI program!
+## 创建项目
+我们以创建一个新的 CLI 项目开始！
 
-I name the project `meow` here.
+这里我将其命名为 `meow`
 
 ```shell
 $ cargo new meow
 $ cd meow
 ```
 
-`cargo` will help you create a new project.
+`cargo` 会帮助你完成新项目的创建。
 
 ## Arguments
-As we have seen how a CLI would be, there are usually arguments for a CLI.
+我们已经看到 CLI 程序的样子，它通常有一些参数。
 
-A simple and naive solution is:
+一个简单直接的方案是：
 
 ```rust
 // main.rs
@@ -95,29 +95,29 @@ $./meow a1 a2 a3
 ["meow", "a1", "a2", "a3"]
 ```
 
-Then we get the arguments.
+我们获取到所有的 CLI 参数。
 
-However, in the real word, the CLI is more complicated, such as:
+然而，说实话，实际的 CLI 程序会更复杂些，比如：
 
 ```shell
 $ ./foo -g -e a1 a3 a4
 $ ./foo a1 -e -l --path=~/test/123
 ```
 
-So the naive way is inconvenient to use.
-- arguments might have default value
-- flags would exchange positions
-- options would exchange positions
-- `arg1` might binds `arg2`
+因而，那个简单的方法不太便于使用，原因如下：
+- 参数可能有默认值
+- 标识会有不同的顺序
+- 一些选项的顺序会不同
+- 参数 `arg1` 可能会绑定参数 `arg2`
 
-So, we need a crate to help us do this job easily.
+所以，我们需要一个 crate 帮助我们简化这个工作。
 
 ### Clap
-[Clap](https://github.com/clap-rs/clap) is a full featured, fast Command Line Argument Parser for Rust.
+[Clap](https://github.com/clap-rs/clap) 具备我们所需的功能，它是 Rust 实现的命令行参数快速解析工具。
 
-How to use it?
+怎么使用它呢？
 
-First, create a `cli.yml` file, which is the setting for arguments. It looks like:
+首先，创建一个 `cli.yml` 文件，用于参数配置。它内容类似于下面：
 
 ```yml
 <!--  cli.yml -->
@@ -151,7 +151,7 @@ subcommands:
                 help: print debug information
 ```
 
-Then we add the following code in `main.rs`
+接着，我们在 `main.rs` 增加以下代码：
 
 ```rust
 #[macro_use]
@@ -159,7 +159,7 @@ extern crate clap;
 use clap::App;
 
 fn main() {
-    // The YAML file is found relative to the current file, similar to how modules are found
+    // YAML 文件以相对于当前的入口文件被检索到，类似于 Rust 中的模块查找
     let yaml = load_yaml!("cli.yml");
     let m = App::from_yaml(yaml).get_matches();
 
@@ -171,9 +171,9 @@ fn main() {
 }
 ```
 
-The `clap` crate will load and parse the yml, and we can use the arguments in the program.
+`clap` crate 会加载并解析 yml 文件，然后我们可以在程序中使用解析出的参数。
 
-The running result of the program with the `cli.yml` above with `-h` is:
+有了上方的 `cli.yml` 文件，我们通过 `-h` 参数运行程序就会得到下面的结果：
 
 ```shell
 $ meow -h
@@ -200,12 +200,12 @@ SUBCOMMANDS:
     test    Controls testing features
 ```
 
-Very convenient. Isn't it?
+非常方便，对吧？
 
-## Configuration
-A CLI will also need configuration. Some parameters should be determined before run time and they are record in the configuration file, which usally is `.env`, `.config`, `.setting`.
+## 配置
+和大多数程序一样， CLI 程序也需要配置。一些参数应该在运行前确定，并记录在譬如 `.env`、`.config`、`.setting` 的配置文件中。
 
-For example, a `.env` file:
+例如 `.env` 文件：
 
 ```env
 PORT = 8000
@@ -215,18 +215,18 @@ ZONE = 8
 AREA = "Taipei"
 ```
 
-you could write by hands
+你可以手写以下逻辑
 
-* read file `.env`
-* split `\n`
-* split `=` and add data to `HashMap`
+* 读取文件 `.env`
+* 通过 `\n` 分隔
+* 将数据通过 `=` 分隔出来并存入 `HashMap`
 
-or use a crate.
+也可以使用一个 crate 帮你实现这些功能
 
 ### dotenv_codegen
-[dotenv_codegen](https://crates.io/crates/dotenv_codegen) is a simple `.env` configuration parser with macro.
+[dotenv_codegen](https://crates.io/crates/dotenv_codegen) 是一个带有宏的 `.env` 配置解析器。
 
-The crate reads `.env`. It is esay to use.
+通过这个 crate 读取 `.env`，很容易使用。
 
 ```rust
 fn main() {
@@ -234,8 +234,8 @@ fn main() {
 }
 ```
 
-## Environment Variables
-You might also want to call the environment variable in the system, such as `JAVA_HOME`.
+## 环境变量
+你可能还想调用系统中的环境变量，如环境变量 `JAVA_HOME`。
 
 ```rust
 use std::env;
@@ -247,22 +247,22 @@ match env::var_os(key) {
 }
 ```
 
-## Error handling
-Erro handling is also important. We don't want the program always `panic!` and shut down the program when it encounter an error. Sometimes, the errors don't matter too much, so we can handle them without break the program, such as running againg or adopting another rule when there is an error.
+## 错误处理
+错误处理非常重要。我们不想程序经常 `panic!`，也不希望当它遭遇错误后就退出程序。有时候，错误不是很致命，我们需要在不退出程序的情况下处理错误，比如在遇到错误时运行特定的规则或逻辑。
 
 ### panic
 ```rust
 panic!("this is panic");
 ```
 
-Simple but powerless.
+以下是一些简便但不优雅的处理方式
 
-* break the program
-* exit without error code
-* better use in script
+* 直接退出程序
+* 退出时，不指定错误码
+* 在脚本中更好地使用
 
 ### Result
-`Result` pass the error without crash. If the function breaks, it will return `Error` with error type. Then we can decide what to do next according to the type, such as "retry" or "give up".
+`Result` 在没有崩溃的情况下传递错误。如果函数中断，它将返回 `Error` 并带有错误类型信息。然后我们根据类型决定下一步做什么，如“重试”，或者“放弃”。
 
 ```rust
 enum MyErr {
@@ -280,13 +280,13 @@ fn hoo() {
         Ok(_) => reply(),
         Err(e) => println!(e) 
         // `e` not work yet
-        // we need `fmt` to tranlate to the message
+        // 我们需要 `fmt` 将信息转换一下
     }
 }
 ```
 
-### Error Message
-You might want to print or use the error message of the error type. You need to `impl` the `fmt` for `MyErr`, so that it will have its own error message.
+### 错误消息
+你可能要打印或者使用错误消息。此时，你需要为 `MyErr` 实现（`impl`）格式化（`fmt`），这样就会拥有自己定义的错误消息。
 
 ```rust
 enum MyErr {
@@ -310,23 +310,23 @@ Err(e) => println!("{}", e)
 // `XXX` is the error
 ```
 
-## Standard error
-There are standard output and standard error in the system.
+## 标准错误
+在操作系统中，有标准输出和标准错误。
 
-`println!()` is the standard output, and `eprintln!()` is the standard error.
+`println!()` 是标准输出，`eprintln!()` 是标准错误。
 
-For example:
+例如：
 
 ```shell
 $ cargo run > output.txt
 ```
 
-The standard output stream will be redirected to the file `output.txt` only.
+此时标准输出流会重定向到 `output.txt` 文件中。
 
-So, if we don't want to write error messages in log files, we can use `eprintln!()` to show error as the stand error.
+那么，如果我们想要把错误消息写到一个日志文件中，可以像“标准错误”一样使用 `eprintln!()` 来展示错误信息。
 
-## Exit Code
-none-zero code lets other programs know it failed.
+## 退出 code
+非 0 值的“退出码”可以让其他程序知道运行的程序有异常。
 
 ```rust
 use std::process;
@@ -336,5 +336,5 @@ fn main() {
 }
 ```
 
-## Conclusion
-A CLI program could do any kind of works, and a good CLI need a well design. It parses arguments and configuration. It reads environment variables. It handles errors well. It output message in standard output and error. It exits with code when it failed.
+## 结语
+CLI 程序完成任意类型的任务，并且好的 CLI 程序需要良好的设计。它可以解析参数和配置。它可以读取环境变量。它还能处理错误。能将信息输出到标准输出和标准错误流中。当它异常退出时会有对应的退出码。
