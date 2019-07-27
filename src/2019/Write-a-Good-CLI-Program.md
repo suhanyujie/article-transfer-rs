@@ -1,4 +1,4 @@
-# 写个好的 CLI 程序
+# 写好 CLI 程序
 >* Write a Good CLI Program 译文
 
 >* 原文链接：https://qiita.com/tigercosmos/items/678f39b1209e60843cc3
@@ -8,7 +8,7 @@
 
 命令行接口程序（CLI）是运行在终端的，这也就意味着没有图形界面，即 none-GUI
 
-事实上，我们每天都会使用 CLI，例如 `ls`、`ps`、`top` 等。有一个[很棒的 cli 应用列表](https://github.com/agarrharr/awesome-cli-apps)，它收集了很多好的 CLI 程序。你可以看一下。我推荐 [exa](https://github.com/ogham/exa)，它是一个用 Rust 版的‘ls’程序。
+事实上，我们每天都会使用 CLI，例如 `ls`、`ps`、`top` 等。有一个[很棒的 cli 应用列表](https://github.com/agarrharr/awesome-cli-apps)，它收集了很多优秀的 CLI 程序。你可以看一下。我推荐 [exa](https://github.com/ogham/exa)，它是一个用 Rust 版的‘ls’程序。
 
 ![](./images07/68747470733a2f2f7261772e67697468756275736572636f6e74656e742e636f6d2f6f6768616d2f6578612f6d61737465722f73637265656e73686f74732e706e67.png)
 
@@ -75,7 +75,7 @@ $ cd meow
 
 `cargo` 会帮助你完成新项目的创建。
 
-## Arguments
+## 参数
 我们已经看到 CLI 程序的样子，它通常有一些参数。
 
 一个简单直接的方案是：
@@ -97,14 +97,14 @@ $./meow a1 a2 a3
 
 我们获取到所有的 CLI 参数。
 
-然而，说实话，实际的 CLI 程序会更复杂些，比如：
+然而，说实话，实际的 CLI 程序的参数会更复杂些，比如：
 
 ```shell
 $ ./foo -g -e a1 a3 a4
 $ ./foo a1 -e -l --path=~/test/123
 ```
 
-因而，那个简单的方法不太便于使用，原因如下：
+因而，那个简单的方法就不太便于使用，原因如下：
 - 参数可能有默认值
 - 标识会有不同的顺序
 - 一些选项的顺序会不同
@@ -218,8 +218,8 @@ AREA = "Taipei"
 你可以手写以下逻辑
 
 * 读取文件 `.env`
-* 通过 `\n` 分隔
-* 将数据通过 `=` 分隔出来并存入 `HashMap`
+* 通过 `\n` 分离
+* 将数据通过 `=` 分离出来并存入 `HashMap`
 
 也可以使用一个 crate 帮你实现这些功能
 
