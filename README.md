@@ -9,6 +9,10 @@
 * [【译】学习写解析器组合器](src/2019/Learning-Parser-Combinators-With-Rust.md)
 * [【译】用`Wasmer`进行插件开发](src/using_wasmer_for_plugins)
 
+## 规范
+### 文件名
+* 文章的名称是英文的，并且特殊字符使用 `-` 替代，可以使用正则 `(:\s+|\ +)`，将特殊字符替换为 `-`
+
 ## 一些文档翻译
 ### PHP7 内核 [PHP Internals Book](./src/PHP-Internals-Book)
 #### 翻译招募
