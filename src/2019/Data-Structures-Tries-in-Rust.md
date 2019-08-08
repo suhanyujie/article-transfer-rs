@@ -12,6 +12,8 @@ I recently went to a job interview (I’m looking for work, by the way; hire me!
 Whiteboard exercises are terrible. I don’t think I’ve ever actually programmed a trie, not even in Data Structures class I took way back in college in 19mumblemumble. I’m sure I’ve used them, but I’ve never had to write one.
 
 ## So what is a trie?
+![](./images08/triegraph-300x142.png)
+
 A [trie](https://en.wikipedia.org/wiki/Trie) is a data structure that encodes _every word_ in a dictionary as a string of nodes, one per letter. This trie encodes the dictionary containing the words “a”, “an,” “ant”, “art”, and “aunt”. If we’re looking up “ant,” we start at the root node and traverse to “a”, then “n”, and then “t”. The “t” is double-circled, that is, it’s marked as a terminal node, and thus “ant” is in this dictionary. If we were looking up the word “any”, we would get to “a,n,” and then fail, because “any” is not in this dictionary. Likewise, we might ask if “aun” is in the dictionary, and we would get to “a,u,n,” but that “n” is not double-circled, and thus “aun” is also not a complete word in this dictionary.
 
 Like a [regular expression](https://github.com/elfsternberg/riggedregex), a trie search is successful when the string is exhausted, the trie is still active, and we find ourselves on a node marked as a word terminator. If the trie exhausts before the string, or if the string exhausts on a non-terminating node, the search fails to find a complete word.
