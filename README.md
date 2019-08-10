@@ -1,4 +1,4 @@
-## 一些rust文章翻译
+## 一些 Rust 文章翻译
 
 ## index
 * [【译】写好 CLI 程序](src/2019/Write-a-Good-CLI-Program.md)
