@@ -1,8 +1,9 @@
-# 使用Rust进行解析器学习
+# 通过 Rust 学习解析器组合子
 * 这是一篇翻译文：*原文链接 https://bodil.lol/parser-combinators/*
 * 翻译[首发](https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md)地址：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Learning-Parser-Combinators-With-Rust.md
 >正文开始：
 
+## 请注意，这个文章的翻译已经迁移到“掘金翻译计划”，链接是 https://juejin.im/post/5cfddd00f265da1b7e102bee
 
 * 本文面向会使用Rust编程的人员，提供一些解析器的基础知识。如果不具备其他知识，我们将会介绍和 Rust 没有直接关系的所有内容，以及使用 Rust 实现这个会更加超出预期的一些方面。如果你还不了解 Rust，这个文章也不会讲如何使用它，如果你已经了解了，那它也不能打包票能教会你解析器组合器的知识。如果你想学习 Rust ，我推荐阅读[Rust编程语言](https://doc.rust-lang.org/book/)。
 
