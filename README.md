@@ -22,5 +22,7 @@
 * internal_types
     * zvals
         * [basic_structure](./src/PHP-Internals-Book/php7/internal_types/zvals/basic_structure.md)
+    * strings
+        * [zend_string](./src/PHP-Internals-Book/php7/internal_types/strings/zend_strings.md)
 
 ### [PHP-Parser-doc](./src/PHP-Parser-doc)
