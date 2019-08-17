@@ -1,4 +1,4 @@
-# 【译】从 Rust 到不只是 Rust：PHP 语言系列
+# 【译】从 Rust 到不只是 Rust：PHP 语言领域
 >From Rust to beyond: The PHP galaxy 译文
 
 >* 原文地址：https://mnt.io/2018/10/29/from-rust-to-beyond-the-php-galaxy/
@@ -10,31 +10,31 @@
 >* 翻译不当之处，还请指出，谢谢！
 >* tags：用 Rust 为 PHP 开发扩展；用 Rust 为 PHP 助力
 
-This blog post is part of a series explaining how to send Rust beyond earth, into many different galaxies. Rust has visited:
+这篇博客文章是“如何将 Rust 传播到其他语言领域”系列文章之一。Rust 完成进度：
 
-- [Prelude](https://mnt.io/2018/08/21/from-rust-to-beyond-prelude/),
-- [The WebAssembly galaxy](https://mnt.io/2018/08/22/from-rust-to-beyond-the-webassembly-galaxy/),
-- [The ASM.js galaxy][https://mnt.io/2018/08/28/from-rust-to-beyond-the-asm-js-galaxy/],
-- [The C galaxy][https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/],
-- The PHP galaxy (this episode), and
-- The NodeJS galaxy.
+- [前言](https://mnt.io/2018/08/21/from-rust-to-beyond-prelude/),
+- [WebAssembly 领域](https://mnt.io/2018/08/22/from-rust-to-beyond-the-webassembly-galaxy/),
+- [ASM.js 领域][https://mnt.io/2018/08/28/from-rust-to-beyond-the-asm-js-galaxy/],
+- [C 领域][https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/],
+- PHP 领域 (当前章节)，以及
+- NodeJS 领域
 
-The galaxy we will explore today is the PHP galaxy. This post will explain what PHP is, how to compile any Rust program to C and then to a PHP native extension.
+我们今天探索的领域是 PHP 领域。这个文章解释了什么是 PHP，如何将 Rust 程序编译成 C 再转换成 PHP 原生扩展。
 
-## What is PHP, and why?
+## PHP 是什么？为什么是它？
 [PHP](https://secure.php.net/) is a:
 
->popular general-purpose scripting language that is especially suited to Web development. Fast, flexible, and pragmatic, PHP powers everything from your blog to the most popular websites in the world.
+>受欢迎的通用脚本语言，尤其是在 web 开发领域。从个人博客到世界上最流行的网站，PHP 提供了快速、灵活并且实用的功能。 
 
-PHP has sadly acquired a bad reputation along the years, but recent releases (since PHP 7.0 mostly) have introduced neat language features, and many cleanups, which are excessively ignored by haters. PHP is also a fast scripting language, and is very flexible. PHP now has declared types, traits, variadic arguments, closures (with explicit scopes!), generators, and a huge backward compatibility. The development of PHP is led by [RFCs](https://wiki.php.net/rfc), which is an open and democratic process. The Gutenberg project is a new editor for WordPress. The latter is written in PHP. This is naturally that we want a native extension for PHP to parse the Gutenberg post format. PHP is a language with a [specification](https://github.com/php/php-langspec). The most popular virtual machine is [Zend Engine](http://php.net/manual/en/internals2.php). Other virtual machines exist, like [HHVM](https://hhvm.com/) (but the PHP support has been dropped recently in favor of their own PHP fork, called Hack), [Peachpie](https://www.peachpie.io/), or [Tagua VM](https://github.com/tagua-vm/tagua-vm) (under development). In this post, we will create an extension for Zend Engine. This virtual machine is written in C. Great, we have visited [the C galaxy in the previous episode](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/)!
+令人遗憾的是，PHP 近年来名声不佳，但是最近的发行版（从 PHP 7.0 开始）引入了许多简洁的语言特性，这些特性令人喜爱。PHP 也是一种快速脚本语言，并且非常灵活。PHP 现在已经具备了类型、性征、可变参数、闭包（带有显式范围）、生成器和强大的向后兼容特性。PHP 的开发由 [RFCs](https://wiki.php.net/rfc) 领导，整个过程是开放和民主的。Gutenberg 项目是 WordPress 的新编辑器。WordPress 是用 PHP 编写的。很自然的，我们需要一个 PHP 的本地扩展来解析 Gutenberg 文章格式。PHP 是一种具有[规范](https://github.com/php/php-langspec)的语言。其最流行的虚拟机是 [Zend Engine](http://php.net/manual/en/internals2.php)，还有一些其他虚拟机，比如 [HHVM](https://hhvm.com/)（但 HHVM 最近已经放弃对 PHP 的支持，转而支持他们团队自己的 PHP 分支，也称为 Hack），[Peachpie](https://www.peachpie.io/) 或 [Tagua VM](https://github.com/tagua-vm/tagua-vm)（正在开发中）。在本文中，我们将为 Zend Engine 创建一个扩展。这个虚拟机是 C 语言编写的。恰好跟之前的一篇文章 [C 系列](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/) 相契合。
 
 ## Rust 🚀 C 🚀 PHP
 ![](./images08/rust-to-php.png)
 
-To port our Rust parser into PHP, we first need to port it to C. It’s been done in the previous episode. Two files result from this port to C: `libgutenberg_post_parser.a` and `gutenberg_post_parser.h`, respectively a static library, and the header file.
+要将 Rust 解析器移植到 PHP 中，我们首先需要将它移植到 C。这在上一篇文章中已经实现了。从这一端到 C 有两个文件：`libgutenberg_post_parser.a` 和 `gutenberg_post_parser.h`，分别是静态库和头文件。
 
-### Bootstrap with a skeleton
-PHP comes with [a script to create an extension skeleton](http://php.net/manual/en/internals2.buildsys.skeleton.php)/template, called [`ext_skel.php`](https://github.com/php/php-src/blob/master/ext/ext_skel.php). This script is accessible from the source of the Zend Engine virtual machine (which we will refer to as `php-src`). One can invoke the script like this:
+### 使用脚手架引导
+PHP 源码中自带了一个创建扩展的[脚手架/模板](http://php.net/manual/en/internals2.buildsys.skeleton.php)，是 [`ext_skel.php`](https://github.com/php/php-src/blob/master/ext/ext_skel.php)。这个脚本可以从 Zend Engine 虚拟机的源代码找到。可以这样对其使用：
 
 ```other
 $ cd php-src/ext/
@@ -53,14 +53,14 @@ gutenberg_post_parser.c
 php_gutenberg_post_parser.h
 ```
 
-The `ext_skel.php` script recommends to go through the following steps:
+`ext_skel.php` 脚本建议以如下步骤使用：
 
-- Rebuild the configuration of the PHP source (run `./buildconf` at the root of the `php-src` directory),
-- Reconfigure the build system to enable the extension, like `./configure --enable-gutenberg_post_parser`,
-- Build with `make`,
-- Done.
+- 重新构建 PHP 源码配置（在 `php-src` 根目录下运行 `./buildconf`），
+- 重新配置构建系统以启用扩展，如 `./configure --enable-gutenberg_post_parser`，
+- 使用 `make` 构建
+- 完成
 
-But our extension is very likely to live outside the `php-src` tree. So we will use `phpize` instead. `phpize` is an executable that comes with `php`, `php-cgi`, `phpdbg`, `php-config` etc. It allows to compile extensions against an already compiled `php` binary, which is perfect in our case! We will use it like this :
+但是我们的扩展很可能位于 `php-src` 以外的目录。所以我们使用 `phpize`。`phpize` 跟 `php`、`php-cgi`、`phpdbg`、`php-config` 等类似，是一个可执行文件。它让我们根据已编译的 `php` 二进制文件去编译扩展，这很符合在我们的例子。我们像下面这样使用它：
 
 ```other
 $ cd /path/to/extension/gutenberg_post_parser
@@ -81,7 +81,7 @@ $ # Compile.
 $ make install
 ```
 
-In this post, we will not show all the edits we have done, but we will rather focus on the extension binding. `All the sources can be found here`(https://github.com/Hywan/gutenberg-parser-rs/tree/master/bindings/php/extension/gutenberg_post_parser). Shortly, here is the `config.m4` file:
+在这篇文章中，我们将不再展示相关的代码修改，而是将重点放在扩展绑定上。所有的相关源码可以[在这里找到](https://github.com/Hywan/gutenberg-parser-rs/tree/master/bindings/php/extension/gutenberg_post_parser)，简单的说，这是 `config.m4` 文件的配置:
 
 ```other
 PHP_ARG_ENABLE(gutenberg_post_parser, whether to enable gutenberg_post_parser support,
@@ -96,11 +96,11 @@ if  test "$PHP_GUTENBERG_POST_PARSER" != "no"; then
 fi
 ```
 
-What it does is basically the following:
-- Register the `--with-gutenberg_post_parser` option in the build system, and
-- Declare the static library to compile with, and the source of the extension itself.
+它的作用主要有以下这些：
+    - 在构建系统中注册 `--with-gutenberg_post_parser` 选项，并且
+    - 声明要编译的静态库以及扩展源代码。
 
-We must add the `libgutenberg_post_parser.a` and `gutenberg_post_parser.h` files in the same directory (a symlink is perfect), to get a structure such as:
+我么必须在同一级目录（链接符号是可用的）下添加 `libgutenberg_post_parser.a` 和 `gutenberg_post_parser.h` 文件，然后可以得到如下的目录结构：
 
 ```other
 $ ls gutenberg_post_parser
@@ -114,10 +114,10 @@ libgutenberg_post_parser.a   # from Rust
 php_gutenberg_post_parser.h  # from ext_skel
 ```
 
-The core of the extension is the `gutenberg_post_parser.c` file. This file is responsible to create the module, and to bind our Rust code to PHP.
+扩展的核心是 `gutenberg_post_parser.c` 文件。这个文件负责创建模块，并且将 Rust 代码绑定到 PHP。
 
-### The module, aka the extension
-As said, we will work in the `gutenberg_post_parser.c` file. First, let’s include everything we need:
+### 模块即扩展
+如前所述，我们将在 `gutenberg_post_parser.c` 中实现我们的逻辑。首先，引入所需要的文件：
 
 ```c
 #include "php.h"
@@ -127,6 +127,7 @@ As said, we will work in the `gutenberg_post_parser.c` file. First, let’s incl
 ```
 
 The last line includes the `gutenberg_post_parser.h` file generated by Rust (more precisely, by `cbindgen`, if you don’t remember, [take a look at the previous episode](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/)). Then, we have to decide what API we want to expose into PHP? As a reminder, the Rust parser produces an AST defined as:
+最后一行引入的 `gutenberg_post_parser.h` 文件由 Rust 生成（准确的说是 `cbindgen` 生成的，如果你不记得，[阅读上一篇文章](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/)）。接着，我们必须决定好向 PHP 暴露的 API，Rust 解析器生成的 AST 定义如下：
 
 ```rust
 pub enum Node<'a> {
@@ -139,7 +140,7 @@ pub enum Node<'a> {
 }
 ```
 
-The C variant of the AST is very similar (with more structures, but the idea is almost identical). So in PHP, the following structure has been selected:
+AST 的 C 变体与上方的版本是类似的（具有很多结构，但思路几乎相同）。所以在 PHP 中，选择如下结构：
 
 ```php
 class Gutenberg_Parser_Block {
@@ -157,9 +158,10 @@ function gutenberg_post_parse(string $gutenberg_post): array;
 ```
 
 The `gutenberg_post_parse` function will output an array of objects of kind `Gutenberg_Parser_Block` or `Gutenberg_Parser_Phrase`, i.e. our AST. So, let’s declare those classes!
+`gutenberg_post_parse` 函数的所用是输出一个对象数组，对象类型是 `gutenberg_post_parse` 或 `Gutenberg_Parser_Phrase`，也就是我们的 AST。我们可以定义这些类。
 
 ### Declare the classes
-_Note: The next 4 code blocks are not the core of the post, it is just code that needs to be written, you can skip it if you are not about to write a PHP extension._
+_注意：后面的 4 个代码块不是本文的核心，它只是需要编写的代码，如果你不打算编写 PHP 扩展，可以跳过它_
 
 ```c
 zend_class_entry *gutenberg_parser_block_class_entry;
@@ -171,7 +173,7 @@ typedef struct _gutenberg_parser_node {
 } gutenberg_parser_node;
 ```
 
-A class entry represents a specific class type. A handler is associated to a class entry. The logic is somewhat complicated. If you need more details, I recommend to read the [PHP Internals Book](http://www.phpinternalsbook.com/). Then, let’s create a function to instanciate those objects:
+一个 class entry 代表一个特定的类型。并会有对应的处理程序与 class entry 相关联。逻辑有些复杂。如果你想了解更多内容，我建议你阅读 [PHP Internals Book](http://www.phpinternalsbook.com/)。接着，我们创建一个函数来实例化这些对象：
 
 ```c
 static zend_object *create_parser_node_object(zend_class_entry *class_entry)
@@ -189,7 +191,7 @@ static zend_object *create_parser_node_object(zend_class_entry *class_entry)
 }
 ```
 
-Then, let’s create a function to free those objects. It works in two steps: Destruct the object by calling its destructor (in the user-land), then free it for real (in the VM-land):
+然后，我们创建一个函数来释放这些对象。它的工作有两步：调用对象的析构函数（在用户态）来析构对象，然后将其释放（在虚拟机中）：
 
 ```c
 static void destroy_parser_node_object(zend_object *gutenberg_parser_node_object)
@@ -203,44 +205,40 @@ static void free_parser_node_object(zend_object *gutenberg_parser_node_object)
 }
 ```
 
-Then, let’s initialize the “module”, i.e. the extension. During the initialisation, we will create the classes in the user-land, declare their attributes etc.
+然后，我们初始化这个“模块”，也就是扩展。在初始化过程中，我们将在用户空间中创建类，并声明它的属性等。
 
 ```c
 PHP_MINIT_FUNCTION(gutenberg_post_parser)
 {
     zend_class_entry class_entry;
 
-    // Declare Gutenberg_Parser_Block.
+    // 声明 Gutenberg_Parser_Block.
     INIT_CLASS_ENTRY(class_entry, "Gutenberg_Parser_Block", NULL);
     gutenberg_parser_block_class_entry = zend_register_internal_class(&class_entry TSRMLS_CC);
 
-    // Declare the create handler.
+    // 声明 create handler.
     gutenberg_parser_block_class_entry->create_object = create_parser_node_object;
 
-    // The class is final.
+    // 类是 final 的（不能被继承）
     gutenberg_parser_block_class_entry->ce_flags |= ZEND_ACC_FINAL;
 
-    // Declare the `namespace` public attribute,
-    // with an empty string for the default value.
+    // 使用空字符串作为默认值声明 `namespace` 公共属性,
     zend_declare_property_string(gutenberg_parser_block_class_entry, "namespace", sizeof("namespace") - 1, "", ZEND_ACC_PUBLIC);
 
-    // Declare the `name` public attribute,
-    // with an empty string for the default value.
+    // 使用空字符串作为默认值声明 `name` 公共属性
     zend_declare_property_string(gutenberg_parser_block_class_entry, "name", sizeof("name") - 1, "", ZEND_ACC_PUBLIC);
 
-    // Declare the `attributes` public attribute,
-    // with `NULL` for the default value.
+    // 使用 `NULL` 作为默认值声明 `attributes` 公共属性
     zend_declare_property_null(gutenberg_parser_block_class_entry, "attributes", sizeof("attributes") - 1, ZEND_ACC_PUBLIC);
 
-    // Declare the `children` public attribute,
-    // with `NULL` for the default value.
+    // 使用 `NULL` 作为默认值，声明 `children` 公共属性
     zend_declare_property_null(gutenberg_parser_block_class_entry, "children", sizeof("children") - 1, ZEND_ACC_PUBLIC);
 
-    // Declare the Gutenberg_Parser_Block.
+    // 声明 Gutenberg_Parser_Block.
 
     … skip …
 
-    // Declare Gutenberg parser node object handlers.
+    // 声明 Gutenberg 解析器节点对象 handler
 
     memcpy(&gutenberg_parser_node_class_entry_handlers, zend_get_std_object_handlers(), sizeof(gutenberg_parser_node_class_entry_handlers));
 
@@ -252,10 +250,10 @@ PHP_MINIT_FUNCTION(gutenberg_post_parser)
 }
 ```
 
-If you are still reading, first: Thank you, and second: Congrats! Then, there is a `PHP_RINIT_FUNCTION` and a `PHP_MINFO_FUNCTION` functions that are already generated by the `ext_skel.php` script. Same for the module entry definition and other module configuration details.
+如果你还在阅读，首先我表示感谢，其次，恭喜！接着，代码中有 `PHP_RINIT_FUNCTION` 和 `PHP_MINFO_FUNCTION` 函数，它们是由 `ext_skel.php` 脚本生成的。模块条目信息和模块配置也是这样生成的。
 
-### The `gutenberg_post_parse` function
-We will now focus on the `gutenberg_post_parse` PHP function. This function takes a string as a single argument  and returns either `false` if the parsing failed, or an array of objects of kind `Gutenberg_Parser_Block` or `Gutenberg_Parser_Phrase` otherwise. Let’s write it! Notice that it is declared with [the `PHP_FUNCTION` macro](https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/main/php.h#L400).
+### `gutenberg_post_parse` 函数
+现在我们将重点介绍 `gutenberg_post_parse` 函数。该函数接收一个 字符串作为参数，如果解析失败，则返回 `false`，否则返回类型为 `Gutenberg_Parser_Block` 或 `Gutenberg_Parser_Phrase` 的对象数组。我们开始编写它！注意它是由 [`PHP_FUNCTION` 宏](https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/main/php.h#L400)声明的.
 
 ```c
 PHP_FUNCTION(gutenberg_post_parse)
@@ -263,43 +261,43 @@ PHP_FUNCTION(gutenberg_post_parse)
     char *input;
     size_t input_len;
 
-    // Read the input as a string.
+    // 将 input 作为字符串读入
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &input, &input_len) == FAILURE) {
         return;
     }
 ```
 
-At this step, the argument has been declared and typed as a string (`"s"`). The string value is in `input` and the string length is in `input_len`. The next step is to parse the `input`. (The length of the string is not needed). This is where we are going to call our Rust code! Let’s do that:
+在这个步骤中，参数已经作为字符串（`"s"`）被声明和引入了。字符串值在 `input` 中，字符串长度存储在 `input_len`。下一步就是解析 `input`。（实际上不需要字符串长度）。这就是我们要调用 Rust 代码的地方！我们可以这样做：
 
 ```c
-// Parse the input.
+    // 解析 input
     Result parser_result = parse(input);
 
-    // If parsing failed, then return false.
+    // 如果解析失败，则返回 false.
     if (parser_result.tag == Err) {
         RETURN_FALSE;
     }
 
-    // Else map the Rust AST into a PHP array.
+    // 否则将 Rust 的 AST 映射到 PHP 的数组中
     const Vector_Node nodes = parse_result.ok._0;
 ```
 
-The `Result` type and the `parse` function come from Rust. If you don’t remember those types, please [read the previous episode about the C galaxy](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/). Zend Engine has a macro called `RETURN_FALSE` to return… `false`! Handy isn’t it? Finally, if everything went well, we get back a collection of node as a `Vector_Node` type. The next step is to map those Rust/C types into PHP types, i.e. an array of the Gutenberg classes. Let’s go:
+`Result` 类型和 `parse` 函数是 Rust 中的。如果你不记得这些类型，可以阅读前一篇[关于 C 领域的文章](https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/)。Zend Engine 有 `RETURN_FALSE` 宏，用于返回 `false`！很方便是吗？最后，如果顺利，我们将得到 `Vector_Node` 类型的节点集合。下一步是将它们映射到 PHP 类型中，如 Gutenberg 类型的数组。我们开始干吧：
 
 ```c
-    // Note: return_value is a “magic” variable that holds the value to be returned.
+    // 注意：return_value 是一个"魔术"变量，它用于存放返回值
     //
-    // Allocate an array.
+    // 分配一个数组空间
     array_init_size(return_value, nodes.length);
 
-    // Map the Rust AST.
+    // 映射 Rust AST
     into_php_objects(return_value, &nodes);
 }
 ```
 
-Done 😁! Oh wait… the `into_php_objects` function need to be written!
+完事了 😁！噢，等等 …… 还要实现 `into_php_objects`函数！
 
-### The `into_php_objects` function
+### `into_php_objects` 函数
 This function is not terribly complex: It’s just full of Zend Engine specific API as expected. We are going to explain how to map a `Block` into a `Gutenberg_Parser_Block` object, and to let the `Phrase` mapping to `Gutenberg_Parser_Phrase` for the assiduous readers. And there we go:
 
 ```c
