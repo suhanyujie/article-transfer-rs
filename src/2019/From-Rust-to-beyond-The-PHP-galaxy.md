@@ -298,7 +298,7 @@ PHP_FUNCTION(gutenberg_post_parse)
 完事了 😁！噢，等等 …… 还要实现 `into_php_objects`函数！
 
 ### `into_php_objects` 函数
-This function is not terribly complex: It’s just full of Zend Engine specific API as expected. We are going to explain how to map a `Block` into a `Gutenberg_Parser_Block` object, and to let the `Phrase` mapping to `Gutenberg_Parser_Phrase` for the assiduous readers. And there we go:
+这个函数并不复杂：只是它是通过 Zend Engine 的 API 实现。我们会向勤奋的读者阐释如何将 `Block` 映射为 `Gutenberg_Parser_Block` 对象，并让 `Phrase` 映射为 `Gutenberg_Parser_Phrase`。我们开始吧：
 
 ```c
 void into_php_objects(zval *php_array, const Vector_Node *nodes)
@@ -309,7 +309,7 @@ void into_php_objects(zval *php_array, const Vector_Node *nodes)
         return;
     }
 
-    // Iterate over all nodes.
+    // 遍历所有节点
     for (uintptr_t nth = 0; nth < number_of_nodes; ++nth) {
         const Node node = nodes->buffer[nth];
 
@@ -322,36 +322,37 @@ void into_php_objects(zval *php_array, const Vector_Node *nodes)
 }
 ```
 
-Now let’s map a block. The process is the following:
-    1. Allocate PHP strings for the block namespace, and for the block name,
-    2. Allocate an object,
-    3. Set the block namespace and the block name to their respective object properties,
-    4. Allocate a PHP string for the block attributes if any,
-    5. Set the block attributes to its respective object property,
-    6. If any children, initialise a new array, and call `into_php_objects` with the child nodes and the new array,
-    7. Set the children to its respective object property,
-    8. Finally, add the block object inside the array to be returned.
+现在，我们开始实现映射一个内存区块（以下简称块）。主要过程如下:
+    1. 为块名称空间和块名称分配 PHP 字符串，
+    2. 分配对象,
+    3. 将块名称空间和块名称设定为各自的独享属性
+    4. 为块属性分配一个 PHP 字符串
+    5. 把块属性设定为对应的对象属性
+    6. 如果有子节点，初始化一个数组，并使用子节点和新数组调用 `into_php_objects`
+    7. 把子节点设定为对应的对象属性
+    8. 最后，在返回的数组中添加块对象
 
 ```c
 const Block_Body block = node.block;
 zval php_block, php_block_namespace, php_block_name;
 
-// 1. Prepare the PHP strings.
+// 1. 准备 PHP 字符串
 ZVAL_STRINGL(&php_block_namespace, block.namespace.pointer, block.namespace.length);
 ZVAL_STRINGL(&php_block_name, block.name.pointer, block.name.length);
 ```
 
 Do you remember that namespace, name and other similar data are of type `Slice_c_char`? It’s just a structure with a pointer and a length. The pointer points to the original input string, so that there is no copy (and this is the definition of a slice actually). Well, Zend Engine has [a `ZVAL_STRINGL` macro](https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/Zend/zend_API.h#L563-L565) that allows to create a string from a pointer and a length, great! Unfortunately for us, Zend Engine does [a copy behind the scene](https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/Zend/zend_string.h#L152-L159)… There is no way to keep the pointer and the length only, but it keeps the number of copies small. I think it is to take the full ownership of the data, which is required for the garbage collector.
+你还记得名称空间、名称和其他类似数据的类型是 `Slice_c_char` 吗？它就是一个带有指针和长度的结构体。指针指向原始的输入字符串，因此没有副本（这其实是 slice 的定义）。好了，Zend Engine 中有名为 [`ZVAL_STRINGL`]((https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/Zend/zend_API.h#L563-L565)) 的宏，它的功能是在指针和长度的基础上创建字符串，很棒！可不幸的是，Zend Engine [在底层做了拷贝](https://github.com/php/php-src/blob/52d91260df54995a680f420884338dfd9d5a0d49/Zend/zend_string.h#L152-L159)…… 没有办法只保留指针和长度，但是它使拷贝的数量很小。我想应该获取数据的全部所有权，这是垃圾回收所必须的。
 
 ```c
-// 2. Create the Gutenberg_Parser_Block object.
+// 2. 创建 Gutenberg_Parser_Block 对象
 object_init_ex(&php_block, gutenberg_parser_block_class_entry);
 ```
 
-The object has been instanciated with a class represented by the `gutenberg_parser_block_class_entry`.
+使用 `gutenberg_parser_block_class_entry` 所代表的类实例化对象。
 
 ```c
-// 3. Set the namespace and the name.
+// 3. 设定命名空间和名称
 add_property_zval(&php_block, "namespace", &php_block_namespace);
 add_property_zval(&php_block, "name", &php_block_name);
 
@@ -359,27 +360,27 @@ zval_ptr_dtor(&php_block_namespace);
 zval_ptr_dtor(&php_block_name);
 ```
 
-The `zval_ptr_dtor` adds 1 to the reference counter. This is required for the garbage collector.
+`zval_ptr_dtor` 的作用是给引用计数加 1。便于垃圾回收。
 
 ```c
-// 4. Deal with block attributes if some.
+// 4. 处理一些内存块属性
 if (block.attributes.tag == Some) {
     Slice_c_char attributes = block.attributes.some._0;
     zval php_block_attributes;
 
     ZVAL_STRINGL(&php_block_attributes, attributes.pointer, attributes.length);
 
-    // 5. Set the attributes.
+    // 5. 设置属性
     add_property_zval(&php_block, "attributes", &php_block_attributes);
 
     zval_ptr_dtor(&php_block_attributes);
 }
 ```
 
-It is similar to what has been done for `namespace` and `name`. Now let’s continue with children.
+它类似于 `namespace` 和 `name` 所做的。现在我们继续讨论 children。
 
 ```c
-// 6. Handle children.
+// 6. 处理子节点
 const Vector_Node *children = (const Vector_Node*) (block.children);
 
 if (children->length > 0) {
@@ -387,10 +388,10 @@ if (children->length > 0) {
 
     array_init_size(&php_children_array, children->length);
 
-    // Recursion.
+    // 递归
     into_php_objects(&php_children_array, children);
 
-    // 7. Set the children.
+    // 7. 设置 children
     add_property_zval(&php_block, "children", &php_children_array);
 
     Z_DELREF(php_children_array);
@@ -399,36 +400,36 @@ if (children->length > 0) {
 free((void*) children);
 ```
 
-Finally, add the block instance into the array to be returned:
+最后，将块实例增加到返回的数组中：
 
 ```c
-// 8. Insert the object in the collection.
+// 8. 在集合中加入对象
 add_next_index_zval(php_array, &php_block);
 ```
 
-[The entire code lands here.](https://github.com/Hywan/gutenberg-parser-rs/blob/master/bindings/php/extension/gutenberg_post_parser/gutenberg_post_parser.c)
+[完整代码点此查看](https://github.com/Hywan/gutenberg-parser-rs/blob/master/bindings/php/extension/gutenberg_post_parser/gutenberg_post_parser.c)
 
-## PHP extension 🚀 PHP userland
-Now the extension is written, we have to compile it. That’s the repetitive set of commands we have shown above with `phpize`. Once the extension is compiled, the `generated gutenberg_post_parser.so` file must be located in the extension directory. This directory can be found with the following command:
+## PHP 扩展 🚀 PHP 用户态
+现在扩展写好了，我们必须编译它。可以直接重复前面提到的使用 `phpize` 等展示的命令集。一旦扩展被编译，就会在本地的扩展存放目录中生成 `generated gutenberg_post_parser.so` 文件。使用以下命令可以找到该目录：
 
 ```other
 $ php-config --extension-dir
 ```
 
-For instance, in my computer, the extension directory is `/usr/local/Cellar/php/7.2.11/pecl/20170718`. Then, to enable the extension for a given execution, you must write:
+例如，在我的计算机中，扩展目录是 `/usr/local/Cellar/php/7.2.11/pecl/20170718`。然后，要使用扩展需要先启用它，你必须这样做：
 
 ```other
 $ php -d extension=gutenberg_post_parser -m | \
       grep gutenberg_post_parser
 ```
 
-Or, to enable the extension for all executions, locate the `php.ini` file with `php --ini` and edit it to add:
+或者，针对所有的脚本执行启用扩展，你需要使用命令 `php --ini` 定位到 `php.ini` 文件，并编辑，向其中追加以下内容：
 
 ```other
 extension=gutenberg_post_parser
 ```
 
-Done! Now, let’s use some reflection to check the extension is correctly loaded and handled by PHP:
+完成！现在，我们使用一些反射来检查扩展是否被 PHP 正确加载和处理：
 
 ```other
 $ php --re gutenberg_post_parser
@@ -488,7 +489,7 @@ Extension [ <persistent> extension #64 gutenberg_post_parser version 0.1.0 ] {
 }
 ```
 
-Everything looks good: There is one function and two classes that are defined as expected. Now, let’s write some PHP code for the first time in this blog post!
+看起来没什么问题：有一个函数和两个预定义的类。现在，我们来编写本文的 PHP 代码！
 
 ```php
 <?php
@@ -539,18 +540,19 @@ var_dump(
  */
 ```
 
-It works very well!
+它正确执行了！
 
-## Conclusion
-The journey is:
-    - A string written in PHP,
-    - Allocated by the Zend Engine from the Gutenberg extension,
-    - Passed to Rust through FFI (static library + header),
+## 结语
+主要过程：
+    - 获取 PHP 字符串
+    - 在 中 Zend Engine 为 Gutenberg 扩展分配内存，
+    - 通过 FFI（静态库 + header）传递到 Rust，
     - Back to Zend Engine in the Gutenberg extension,
-    - To generate PHP objects,
-    - That are read by PHP.
+    - 通过 Gutenberg 扩展返回到 Zend Engine
+    - 生成 PHP 对象，
+    - PHP 读取该对象。
 
-Rust fits really everywhere! We have seen in details how to write a real world parser in Rust, how to bind it to C and compile it to a static library in addition to C headers, how to create a PHP extension exposing one function and two objects, how to integrate the C binding into PHP, and how to use this extension in PHP. As a reminder, the C binding is about 150 lines of code. The PHP extension is about 300 lines of code, but substracting “decorations” (the boilerplate to declare and manage the extension) that are automatically generated, the PHP extension reduces to about 200 lines of code. Once again, I find this is a small surface of code to review considering the fact that the parser is still written in Rust, and modifying the parser will not impact the bindings (except if the AST is updated obviously)! PHP is a language with a garbage collector. It explains why all strings are copied, so that they are owned by PHP itself. However, the fact that Rust does not copy any data saves memory allocations and deallocations, which is the biggest cost most of the time. Rust also provides safety. This property can be questionned considering the number of binding we are going through: Rust to C to PHP: Does it still hold? From the Rust perspective, yes, but everything that happens inside C or PHP must be considered unsafe. A special care must be put in the C binding to handle all situations. Is it still fast? Well, let’s benchmark. I would like to remind that the first goal of this experiment was to tackle the bad performance of the original PEG.js parser. On the JavaScript ground, WASM and ASM.js have shown to be very much faster (see [the WebAssembly galaxy](https://mnt.io/2018/08/22/from-rust-to-beyond-the-webassembly-galaxy/), and [the ASM.js galaxy](https://mnt.io/2018/08/28/from-rust-to-beyond-the-asm-js-galaxy/)). For PHP, [`phpegjs` is used](https://github.com/nylen/phpegjs): It reads the grammar written for PEG.js and compiles it to PHP. Let’s see how they compare:
+Rust 适用于很多地方！我们已经看到在实际编程中已经有人用 Rust 实现解析器，如何将其绑定到 C 语言并生成静态库除了 C 头文件，如何创建一个 PHP 扩展并暴露一个函数接口和两个对象，如何把“C 绑定”集成到 PHP，以及如何在 PHP 中使用该扩展。提醒一下，“C 绑定”大概有 150 行代码。PHP 扩展大概有 300 行代码，但是减去自动生成的“代码修饰”（一些声明和管理扩展的模板文件），PHP 扩展将减少到大约 200 行代码。同样，考虑到解析器仍然是用 Rust 编写的，修改解析器不会影响绑定（除非 AST 发生了较大更新），我发现 review 代码只需关注一小部分代码。PHP 是一个有垃圾回收的语言。这就解释了为何需要拷贝所有的字符串，这样数据都属于 PHP 本身。然而，Rust 中不拷贝任何数据的事实表明可以减少内存分配和释放，这些开销恰好在大多数情况下是最大的时间成本。Rust 还提供了安全性。这个特性可能受到很多质疑：Rust 到 C 到 PHP，这种安全性还存在吗？从 Rust 的角度看，答案是确定的，但在 C 或 PHP 中发生的所有操作都被认为是不安全的。在 C 绑定中必须特别谨慎处理所有情况。这样还快吗？好吧，让我们进行基准测试。我想提醒你，这个实验的首要目标是解决原始的 PEG.js 解析器性能问题。在 JavaScript 的基础上，WASM 和 ASM.js 已经被证明要快的多（参见 [WebAssembly 领域](https://mnt.io/2018/08/22/from-rust-to-beyond-the-webassembly-galaxy/) 和 [ASM.js 领域](https://mnt.io/2018/08/28/from-rust-to-beyond-the-asm-js-galaxy/)）。对于 PHP，[使用 `phpegjs`](https://github.com/nylen/phpegjs)：它读取为 PEG.js 编写的语法并将其编译到 PHP。我们来比较一下：
 
 文件名 | PEG PHP parser (ms) | Rust parser as a PHP extension (ms) | 提升倍数
 ---| ---- |---- |---
@@ -562,4 +564,4 @@ Rust fits really everywhere! We have seen in details how to write a real world p
 [`pygmalian-raw-html.html`](https://raw.githubusercontent.com/dmsnell/gutenberg-document-library/master/library/pygmalian-raw-html.html) | 377.392 |  	0.052   |  × 7258
 [`moby-dick-parsed.html`](https://raw.githubusercontent.com/dmsnell/gutenberg-document-library/master/library/moby-dick-parsed.html) | 5,437.630 |  5.037   |  × 1080
 
-The PHP extension of the Rust parser is in average 5230 times faster than the actual PEG PHP implementation. The median of the speedup is 941. Another huge issue was that the PEG parser was not able to handle many Gutenberg documents because of a memory limit. Of course, it is possible to grow the size of the memory, but it is not ideal. With the Rust parser as a PHP extension, memory stays constant and close to the size of the parsed document. I reckon we can optimise the extension further to generate an iterator instead of an array. This is something I want to explore and analyse the impact on the performance. The PHP Internals Book has a [chapter about Iterators](http://www.phpinternalsbook.com/classes_objects/iterators.html). We will see in the next episodes of this series that Rust can reach a lot of galaxies, and the more it travels, the more it gets interesting. Thanks for reading!
+Rust 解析器的 PHP 扩展比实际的 PEG PHP 实现平均快 5230 倍。提升的倍数是 941。另一个问题是 PEG 解析器由于内存限制无法处理过多的 Gutenberg 文档。当然，增大内存的大小可能解决这个问题，但并不是最佳方案。使用 Rust 解析器作为 PHP 扩展，内存消耗基本保持不变，并且接近解析文档的大小。我认为我们可以通过迭代器而非数组的方式来进一步优化该扩展。这是我想探索的东西以及分析对性能的影响。PHP 内核书籍有个[迭代器章节](http://www.phpinternalsbook.com/classes_objects/iterators.html)。我们将在本系列的下一节看到 Rust 可以助力于很多领域，而且传播的越多，就越有趣味。感谢你的阅读！
