@@ -22,7 +22,7 @@
 我们今天探索的领域是 PHP 领域。这个文章解释了什么是 PHP，如何将 Rust 程序编译成 C 再转换成 PHP 原生扩展。
 
 ## PHP 是什么？为什么是它？
-[PHP](https://secure.php.net/) is a:
+[PHP](https://secure.php.net/) 是:
 
 >受欢迎的通用脚本语言，尤其是在 web 开发领域。从个人博客到世界上最流行的网站，PHP 提供了快速、灵活并且实用的功能。 
 
