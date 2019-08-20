@@ -320,14 +320,14 @@ void into_php_objects(zval *php_array, const Vector_Node *nodes)
 ```
 
 现在，我们开始实现映射一个内存区块（以下简称块）。主要过程如下:
-    1. 为块名称空间和块名称分配 PHP 字符串，
-    2. 分配对象,
-    3. 将块名称空间和块名称设定为各自的独享属性
-    4. 为块属性分配一个 PHP 字符串
-    5. 把块属性设定为对应的对象属性
-    6. 如果有子节点，初始化一个数组，并使用子节点和新数组调用 `into_php_objects`
-    7. 把子节点设定为对应的对象属性
-    8. 最后，在返回的数组中添加块对象
+1. 为块名称空间和块名称分配 PHP 字符串，
+2. 分配对象,
+3. 将块名称空间和块名称设定为各自的独享属性
+4. 为块属性分配一个 PHP 字符串
+5. 把块属性设定为对应的对象属性
+6. 如果有子节点，初始化一个数组，并使用子节点和新数组调用 `into_php_objects`
+7. 把子节点设定为对应的对象属性
+8. 最后，在返回的数组中添加块对象
 
 ```c
 const Block_Body block = node.block;
@@ -540,12 +540,12 @@ var_dump(
 
 ## 结语
 主要过程：
-    - 获取 PHP 字符串
-    - 在 中 Zend Engine 为 Gutenberg 扩展分配内存，
-    - 通过 FFI（静态库 + header）传递到 Rust，
-    - 通过 Gutenberg 扩展返回数据到 Zend Engine
-    - 生成 PHP 对象，
-    - PHP 读取该对象。
+- 获取 PHP 字符串
+- 在 中 Zend Engine 为 Gutenberg 扩展分配内存，
+- 通过 FFI（静态库 + header）传递到 Rust，
+- 通过 Gutenberg 扩展返回数据到 Zend Engine
+- 生成 PHP 对象，
+- PHP 读取该对象。
 
 Rust 适用于很多地方！我们已经看到在实际编程中已经有人实现如何用 Rust 实现解析器，如何将其绑定到 C 语言并生成除了 C 头文件之外的静态库，如何创建一个 PHP 扩展并暴露一个函数接口和两个对象，如何把“C 绑定”集成到 PHP，以及如何在 PHP 中使用该扩展。提醒一下，“C 绑定”大概有 150 行代码。PHP 扩展大概有 300 行代码，但是减去自动生成的“代码修饰”（一些声明和管理扩展的模板文件），PHP 扩展将减少到大约 200 行代码。同样，考虑到解析器仍然是用 Rust 编写的，修改解析器不会影响绑定（除非 AST 发生了较大更新），我发现整个实现过程只是一小部分代码。PHP 是一个有垃圾回收的语言。这就解释了为何需要拷贝所有的字符串，这样数据都能被 PHP 拥有。然而，Rust 中不拷贝任何数据的事实表明可以减少内存分配和释放，这些开销恰好在大多数情况下是最大的时间成本。Rust 还提供了安全性。考虑到我们要进行绑定的数量，这个特性可能受到质疑：Rust 到 C 到 PHP，这种安全性还存在吗？从 Rust 的角度看，答案是确定的，但在 C 或 PHP 中发生的所有操作都被认为是不安全的。在 C 绑定中必须特别谨慎处理所有情况。这样还快吗？好吧，让我们进行基准测试。我想提醒你，这个实验的首要目标是解决原始的 PEG.js 解析器性能问题。在 JavaScript 的基础上，WASM 和 ASM.js 方案已经被证明要快的多（参见 [WebAssembly 领域](https://mnt.io/2018/08/22/from-rust-to-beyond-the-webassembly-galaxy/) 和 [ASM.js 领域](https://mnt.io/2018/08/28/from-rust-to-beyond-the-asm-js-galaxy/)）。对于 PHP，[使用 `phpegjs`](https://github.com/nylen/phpegjs)：它读取为 PEG.js 编写的语法并将其编译到 PHP。我们来比较一下：
 
