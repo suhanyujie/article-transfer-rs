@@ -543,8 +543,7 @@ var_dump(
     - 获取 PHP 字符串
     - 在 中 Zend Engine 为 Gutenberg 扩展分配内存，
     - 通过 FFI（静态库 + header）传递到 Rust，
-    - Back to Zend Engine in the Gutenberg extension,
-    - 通过 Gutenberg 扩展返回到 Zend Engine
+    - 通过 Gutenberg 扩展返回数据到 Zend Engine
     - 生成 PHP 对象，
     - PHP 读取该对象。
 
