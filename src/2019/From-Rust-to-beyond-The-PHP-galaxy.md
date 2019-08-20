@@ -5,7 +5,7 @@
 >* 原文仓库：https://github.com/Hywan/gutenberg-parser-rs/tree/master/bindings/
 >* 原文作者：[Ivan Enderlin](https://mnt.io/)
 >* 译文出自：https://github.com/suhanyujie
->* 本文永久链接：（缺省）
+>* 本文永久链接：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/From-Rust-to-beyond-The-PHP-galaxy.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
 >* tags：用 Rust 为 PHP 开发扩展；用 Rust 为 PHP 助力
