@@ -2,7 +2,7 @@
 
 >* 原文地址：https://wiredforge.com/blog/binary-pt1/index.html
 >* 原文作者：[freemasen](https://github.com/freemasen)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Understanding_Binary_Pt_1.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 

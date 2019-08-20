@@ -2,7 +2,7 @@
 
 >* 原文地址：https://www.lambdafunctions.com/articles/racing-sed-with-rust
 >* 原文作者：[lambdafunctions](https://www.lambdafunctions.com)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/racing-sed-with-rust.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 

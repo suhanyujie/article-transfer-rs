@@ -4,7 +4,7 @@
 >* 原文地址：https://mnt.io/2018/09/11/from-rust-to-beyond-the-c-galaxy/
 >* 原文仓库：https://github.com/Hywan/gutenberg-parser-rs/tree/master/bindings/c
 >* 原文作者：[Ivan Enderlin](https://mnt.io/)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！

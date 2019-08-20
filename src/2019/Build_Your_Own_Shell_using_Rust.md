@@ -2,7 +2,7 @@
 
 >* 原文地址：https://www.joshmcguigan.com/blog/build-your-own-shell-rust/
 >* 原文作者：[Josh Mcguigan](https://github.com/JoshMcguigan)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Build_Your_Own_Shell_using_Rust.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 

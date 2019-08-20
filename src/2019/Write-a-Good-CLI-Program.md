@@ -3,7 +3,7 @@
 
 >* 原文链接：https://qiita.com/tigercosmos/items/678f39b1209e60843cc3
 >* 原文作者：[Liu, An-Chi](https://www.facebook.com/pg/CodingNeutrino) ([劉安齊](https://github.com/tigercosmos))
->* 译文出处：https://www.github.com/suhanyujie
+>* 译文出处：https://github.com/suhanyujie/article-transfer-rs
 >* 译者：[suhanyujie](https://www.github.com/suhanyujie)
 
 命令行接口程序（CLI）是运行在终端的，这也就意味着没有图形界面，即 none-GUI

@@ -4,7 +4,7 @@
 >* 原文地址：https://medium.com/wasmer/php-ext-wasm-migrating-from-wasmi-to-wasmer-4d1014f41c88
 >* 原文仓库：https://github.com/wasmerio/php-ext-wasm
 >* 原文作者：[Ivan Enderlin](https://medium.com/@hywan)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！

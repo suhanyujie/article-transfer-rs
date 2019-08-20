@@ -4,7 +4,7 @@
 >* 原文地址：https://mnt.io/2018/10/29/from-rust-to-beyond-the-php-galaxy/
 >* 原文仓库：https://github.com/Hywan/gutenberg-parser-rs/tree/master/bindings/
 >* 原文作者：[Ivan Enderlin](https://mnt.io/)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接：https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/From-Rust-to-beyond-The-PHP-galaxy.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！

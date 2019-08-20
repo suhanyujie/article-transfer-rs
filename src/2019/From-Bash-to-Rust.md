@@ -2,7 +2,7 @@
 
 >* 原文地址：https://wiredforge.com/blog/getpid/index.html
 >* 原文作者：[Robert Masen](https://github.com/FreeMasen)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： 
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 

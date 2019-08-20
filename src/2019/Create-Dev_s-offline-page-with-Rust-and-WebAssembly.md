@@ -3,7 +3,7 @@
 >* 原文地址：https://dev.to/sendilkumarn/create-dev-s-offline-page-with-rust-and-webassembly-21gn
 >* 原文仓库：https://github.com/sendilkumarn/draw-page
 >* 原文作者：[Sendil Kumar N](https://dev.to/sendilkumarn)
->* 译文出自：https://github.com/suhanyujie
+>* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
