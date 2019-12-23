@@ -1,6 +1,7 @@
 ## 一些 Rust 文章翻译
 
 ## index
+* [【译】Rust 的 Result 类型入门](src/2019/a-primer-on-rusts-result-type.md)
 * [【译】从 Rust 到不只是 Rust：PHP 语言领域](src/2019/From-Rust-to-beyond-The-PHP-galaxy.md)
 * [【译】写好 CLI 程序](src/2019/Write-a-Good-CLI-Program.md)
 * [【译】使用 Rust 和 WebAssembly 构建离线画图页面](src/2019/Create-Dev_s-offline-page-with-Rust-and-WebAssembly.md)
