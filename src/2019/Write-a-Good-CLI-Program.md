@@ -8,7 +8,7 @@
 
 命令行接口程序（CLI）是运行在终端的，这也就意味着没有图形界面，即 none-GUI
 
-事实上，我们每天都会使用 CLI，例如 `ls`、`ps`、`top` 等。有一个[很棒的 cli 应用列表](https://github.com/agarrharr/awesome-cli-apps)，它收集了很多优秀的 CLI 程序。你可以看一下。我推荐 [exa](https://github.com/ogham/exa)，它是一个用 Rust 版的‘ls’程序。
+事实上，我们每天都会使用 CLI，例如 `ls`、`ps`、`top` 等。有一个[很棒的 cli 应用列表](https://github.com/agarrharr/awesome-cli-apps)，它收集了很多优秀的 CLI 程序。你可以看一下。我推荐 [exa](https://github.com/ogham/exa)，它是一个用 Rust 编写的 `ls` 程序。
 
 ![](./images07/68747470733a2f2f7261772e67697468756275736572636f6e74656e742e636f6d2f6f6768616d2f6578612f6d61737465722f73637265656e73686f74732e706e67.png)
 
