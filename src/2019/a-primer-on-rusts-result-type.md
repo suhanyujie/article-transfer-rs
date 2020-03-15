@@ -202,6 +202,7 @@ Now that we have the user’s input stored in my_string, we need to convert the 
 >现在我们已经将输入的字符串存在 _my_string_ 中，我们需要将其转换为浮点数。使用 _parse()_ 函数可以实现，然后将浮点数结果返回。所以我们有不止 Result 的类型需要处理，但这一次，我们很可能会出现一个错误。如果用户输入的是非数字， _parse()_ 将会返回一个错误类型的 Result（_Err_）。如果发生这种情况，我们不希望程序崩溃。而是希望提示用户没有输入正确的数字，请再试一次。为此，我们需要写好调用 _parse()_ 成功时的逻辑，还要写好调用失败时的逻辑。类似于逐个处理匹配表达式可能的结果。
 
 ## Dissecting the Match Expression
+>分析匹配表达式
 
 ```rust
 match my_string.trim().parse::<f64>() {
@@ -211,6 +212,7 @@ match my_string.trim().parse::<f64>() {
 ```
 
 First, we use the match keyword to declare our match expression. Then, we provide the value that will be analyzed by the match expression. That value comes from:
+>首先，我们使用 match 关键字来声明匹配表达式。然后，我们提供与表达式匹配的分析值。这个值就是下面所示：
 
 ```rust
 my_string.trim().parse::<f64>()
