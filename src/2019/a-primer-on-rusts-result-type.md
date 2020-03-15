@@ -104,19 +104,26 @@ _unwrap()_ 函数可以看出 Result 中类型，可能是 _Ok_，也可能是 _
 ![](https://miro.medium.com/max/470/1*bPYM5NAZ8OYenRAejcI7uA.gif)
 
 You can also handle a Result with the _expect()_ function like so:
+你也可以用 _expect()_ 函数像下方这样来处理 Result：
 
 ```rust
 let my_number: f64 = my_string.trim().parse().expect(“Parse failed”);
 ```
 
 The way _expect()_ works is similar to _unwrap()_, but if the Result is _Err_, _expect()_ will let the program crash **and** display the string that was passed to it. In the example, that string is “Parse failed.”
+>_expect()_ 的工作方式类似于 _unwrap()_，假如 Result 是 _Err_，_expect()_ 将会使程序崩溃**并且**将其中的字符串内容——"Parse failed."展示在标准输出中。
 
 ## The Problem with Unwrap() and Expect()
+>使用 unwrap() 和 expect() 的缺陷
+
 When using the _unwrap()_ and _expect()_ functions, the program crashes if there is an error. That is okay when there is very little chance of an error occurring, but in some cases an error is more likely to occur.
+>当我们使用 _unwrap()_ 和 _expect()_ 函数时，如果遇到错误，程序会发生崩溃。如果错误发生的几率非常小，这也许可以容忍，但在某些情况下，错误发生的概率会比较大。
 
 In our example, it is likely that the user will make a typo, entering something other than a number (maybe a letter or a symbol). We do not want the program to crash every time the user makes a mistake. Instead, we want to tell the user to try entering the number again. This is where Result becomes very useful, especially when it is combined with a match expression.
+>在上面的示例中，用户可能输入错误，输入的不是数值（可能是字母或者特殊符号）。我们并不想每次用户输入错误的内容程序就发生崩溃。相反，我们应该提示用户应该输入数字。这种场景下，Result 就非常有用，尤其是当它与一个匹配表达式相结合的时候。
 
 # Fixing the Error with a Match Expression
+>用匹配表达式修复错误
 
 ```rust
 use std::io::{stdin, self, Write};
@@ -138,31 +145,44 @@ fn main(){
 ```
 
 If you ask me, that is some fun code!
+>如果你问我怎么实现，上面就是示例代码！
 
 The main difference between the fixed program and the broken program above is inside the loop. Let’s break it down.
+>前面提到的不优雅的实现和优雅的实现方式的不同点是在循环体内部。我们可以分解一下。
 
 # The Code Explained
+>代码分析
+
 Before the loop, we prompted the user to enter a number. Then we declared my_num.
+>在 loop 之前，我们提示用户输入一个数字。接着我们声明 my_num。
 
 We assign the value returned from the loop (the user’s input, which will have been converted from a string to a number) to my_num:
+>我们将循环体中返回的值（用户的输入，它将从字符串转换为数字）赋给 my_num：
 
 ```rust
 let my_num = loop {
 ```
 
 Within the loop, we handle the user’s input. After we accept the input, there are three problems we need to solve.
+>在循环体中，我们阻塞等待用户输入。然后接收用户的输入，在这个过程中我们有三个问题要解决。
 
 - 1.We need to make sure the user entered a number and not something else, like a word or a letter.
+- 1.我们需要确定用户输入的是数字而非其他的字符，一个词或者一个字母。
 - 2.Rust’s _read_line()_ function takes the user’s input as a string. We need to convert that string to a floating-point number.
+- 2.Rust 中的 _read_line()_ 函数可以以字符串的类型拿到用户的输入。我们需要将其转换为浮点数。
 - 3.If the user doesn’t enter a number, we need to clear out the variable that holds the user’s input and prompt the user to try again.
+- 3.如果用户没有输入数字，我们需要清理变量，并提示和等待用户再次输入。
+
 
 Part of problem number three (clearing the my_string variable) is solved in the first line inside the loop:
+>在第三部分问题（清理 my_string 变量）在循环体内的第一行就已经实现了：
 
 ```rust
 my_string.clear();
 ```
 
 Next, we accept the user’s input with:
+>下一步，我们接收用户的输入：
 
 ```rust
 stdin().read_line(&mut my_string)
@@ -170,11 +190,16 @@ stdin().read_line(&mut my_string)
 ```
 
 The _read_line()_ function returns a Result type. We are handling that Result with the _expect()_ function. That is fine in this situation because the chances of _read_line()_ resulting in an error is extremely rare. A user typically cannot enter anything but a string in the terminal, and that is all _read_line()_ needs in this case.
+>_read_line()_ 函数返回一个 Result 类型。我们使用 _expect()_ 函数处理它。在这种情形下是完全没问题的，因为 _read_line()_ 出错的几率非常小。用户通常只能在终端输入一个字符串，而这正是 _read_line()_ 所需要的。
 
 The string of user input returned by _read_line()_ is stored in the _my_string_ variable.
+>通过 _read_line()_ 把用户输入的字符串返回并存在 _my_string_ 变量中。
 
 ## The Juicy Part
+>渐入佳境
+
 Now that we have the user’s input stored in my_string, we need to convert the string to a floating-point number. The _parse()_ function does that conversion, then returns the value in a Result. So we have more Result handling to do, but this time there is a good chance we will have an error on our hands. If the user enters anything but a number, _parse()_ will return an error Result (_Err_). If that happens, we don’t want the program to crash. We want to tell the user that a number wasn’t entered, and to try again. For that, we need our code to do one thing if _parse()_ succeed and something else if _parse()_ failed. Queue the match expression.
+>现在我们已经将输入的字符串存在 _my_string_ 中，我们需要将其转换为浮点数。使用 _parse()_ 函数可以实现，然后将浮点数结果返回。所以我们有不止 Result 的类型需要处理，但这一次，我们很可能会出现一个错误。如果用户输入的是非数字， _parse()_ 将会返回一个错误类型的 Result（_Err_）。如果发生这种情况，我们不希望程序崩溃。而是希望提示用户没有输入正确的数字，请再试一次。为此，我们需要写好调用 _parse()_ 成功时的逻辑，还要写好调用失败时的逻辑。类似于逐个处理匹配表达式可能的结果。
 
 ## Dissecting the Match Expression
 
