@@ -19,6 +19,7 @@ In hopes of saving a few brains, I am going to explain Rust’s Result in plain 
 # Result 是什么？
 ## According to [the Rust book](https://doc.rust-lang.org/1.30.0/book/first-edition/error-handling.html)
 >参考[Rust 编程手册](https://doc.rust-lang.org/1.30.0/book/first-edition/error-handling.html)
+
 “Result expresses the possibility of error. Usually, the error is used to explain why the execution of some computation failed.”
 >“Result 表达的是错误的可能性。通常错误是用来解释某种任务执行失败的原因。”
 
