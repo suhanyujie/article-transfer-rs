@@ -226,10 +226,13 @@ my_string.trim().parse::<f64>()
 ```
 
 That little chunk of code takes my_string, which is holding the user’s input, and feeds it into the _trim()_ function. _Trim()_ just removes any extra lines or spaces that might have tagged along with the user’s input. We need _trim()_ because _read_line()_ attaches an extra line to the input, which messes up the type conversion. The cleaned up my_string is then passed into the _parse()_ function which attempts to convert it into a floating-point number.
+>这段代码接收 my_string 参数，它将用户输入的内容保存下来，并提供给 _trim()_ 函数。_trim()_ 函数会删除掉字符串两侧可能存在的额外空行或空格。我们之所以需要 _trim()_ 是因为 _read_line()_ 函数在输入中附加了一个额外的空行，这会导致转换会出现异常。然后将清理了空格字符的 my_string 传递到 _parse()_ 函数中，该函数会尝试将其转换为浮点数。
 
 If _parse()_ successfully converts my_string to a number, it returns Ok. Within that Ok, we can find our floating-point number. If the user entered something other than a number, then _parse()_ will not be able to complete the conversion. If _parse()_ can’t do its job, it returns Err.
+>如果 _parse()_ 成功地将 my_string 转换为数字，则返回 Ok。在这个情况下，我们可以得到浮点数。如果用户输入的不是数字，那么 _parse()_ 将无法正常完成转换，它会返回 Err。
 
 Within the curly brackets (the body) of our match expression, we tell the computer what to do based on what type _parse()_ returns:
+>在匹配表达式的花括号（主体）中，我们根据 _parse()_ 返回的类型告诉计算机怎么做：
 
 ```rust
 Ok(_s) => break _s,
@@ -237,15 +240,23 @@ Err(_err) => println!(“Try again. Enter a number.”)
 ```
 
 **If the Result is Ok**, _parse()_ was able to convert the type. In that case, we call a break, which stops the loop from looping, and we return the value stored in the Ok, which has been placed in the _s variable.
+>**如果结果是 Ok**，则表示 _parse()_ 能够转换该类型。这时，我们调用一个 break，停止循环，并返回存储在 Ok 中的值，这个值会被放在 _s 变量中。
 
 **If the Result is Err**, _parse()_ was not able to convert the type. In that case, we tell the user to “Try again. Enter a number.” Since we do not call a break, the loop starts over.
+>**如果结果是 Err**，_parse()_ 无法完成转换。这时，我们会告诉用户“重试一次。输入一个数字”。由于我们不调用 break，所以循环重新开始。
 
 >If I had to explain the whole Result thing in one sentence, it would be: If a function returns a Result, a match expression can execute different code based on whether the Result is Ok or Err.
 
+>如果必须用一句话解释 Result，那就是：如果一个函数返回 Result，一个匹配表达式可以根据结果是 Ok 还是 Err 来执行不同的代码。
+
 ## Using Result in Your Own Functions
+>在你的函数中应用 Result
+
 Now that you understand how to handle Result, you might want to use it in some of the functions you create.
+>既然你已经了解了处理 Result 的方法，那么你可能会希望在你自己创建的函数中使用它。
 
 Let’s look at an example.
+>我们先看一个例子。
 
 ```rust
 fn main(){
@@ -267,10 +278,13 @@ fn main(){
 ```
 
 This program checks the value of _my_num_. If the value is 50, then it shows success, but if the value is not 50, it shows an error.
+>这个程序检查 _my_num_ 的值。如果值为 50，则表示成功；如果不是，则表示错误。
 
 The _is_it_fifty()_ function is the main specimen here. It is the declared function that returns a Result. Let’s look at in line by line.
+>这段代码的主体是 _is_it_fifty()_ 函数。它是有返回结果的声明式函数。我们逐行看其中的代码。
 
 First, we declare _my_num_ and set its value. Then, we declare the _is_it_fifty()_ function:
+>首先，我们声明 _my_num_ 并给它赋值。然后，我们声明 _is_it_fifty()_ 函数：
 
 ```rust
 fn is_it_fifty(num: u32) -> Result<u32, &’static str> {
