@@ -1,24 +1,23 @@
 # 【译】使用 Rust 构建你自己的 Shell
 
+>* Build Your Own Shell using Rust 译文
 >* 原文地址：https://www.joshmcguigan.com/blog/build-your-own-shell-rust/
 >* 原文作者：[Josh Mcguigan](https://github.com/JoshMcguigan)
 >* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Build_Your_Own_Shell_using_Rust.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 
-> 正文开始
-
 * 这是一个使用 Rust 构建自己的 shell 的教程，已经被收录在 [build-your-own-x](https://github.com/danistefanovic/build-your-own-x) 列表中。自己创建一个 shell 是理解 shell、终端模拟器、以及 OS 等协同工作的好办法。
 
 ## shell 是什么？
 * shell 是一个程序，它可以用于控制你的计算机。这在很大程度上简化了启动应用程序。但 shell 本身并不是一个交互式应用程序。
-* 大多数用户通过终端模拟器来和 shell 交互。用户 [geirha](https://askubuntu.com/a/111149)  对终端模拟器的形容如下：
+* 大多数用户通过终端模拟器来和 shell 交互。Ubuntu 问答社区的用户 [geirha](https://askubuntu.com/a/111149) 对终端模拟器的定义如下：
 >终端模拟器（通常简称为终端）就是一个“窗口”，是的，它运行一个基于文本的程序，默认情况下，它就是你登陆的 shell （也就是 Ubuntu 下的 bash）。当你在窗口中键入字符时，终端除了将这些字符发送到 shell （或其他程序）的 stdin 之外，还会在窗口中绘制这些字符。 shell 输出到 stdout 和 stderr 的字符被发送到终端，终端在窗口中绘制这些字符。
 
 * 在本教程中，我们将编写自己的 shell ，并在普通的终端模拟器（通常在 cargo 运行的地方）中运行它。
 
 ## 从简单开始
-* 最简单的 shell 只需要几行 Rust 代码。这里我们创建一个新字符串，用于保存用户输入。`stdin().read_line` 将会在用户输入处阻塞，直到用户按下回车键，然后它将整个用户输入的内容（包括回车键的空行）写入字符串。使用 `input.trim()` 删除换行符等空行，我们尝试在命令行中运行它。
+* 最简单的 shell 只需要几行 Rust 代码。这里我们创建一个新字符串，用于保存用户输入。`stdin().read_line` 将会在用户输入处阻塞，直到用户按下回车键，然后它将整个用户输入的内容（包括回车键的空行）写入字符串。使用 `input.trim()` 删除换行符等空白符，我们试一试它。
 
 ```rust
 fn main(){
@@ -26,6 +25,7 @@ fn main(){
     stdin().read_line(&mut input).unwrap();
 
     // read_line leaves a trailing newline, which trim removes
+    // read_line 会在最后留下一个换行符，在处理用户的输入后会被删除
     let command = input.trim(); 
 
     Command::new(command)
@@ -44,7 +44,9 @@ fn main(){
 fn main(){
     loop {
         // use the `>` character as the prompt
+        // 使用 `>` 作为提示
         // need to explicitly flush this to ensure it prints before read_line
+        // 需要显式地刷新它，这样确保它在 read_line 之前打印
         print!("> ");
         stdout().flush();
 
@@ -58,6 +60,7 @@ fn main(){
             .unwrap();
 
         // don't accept another command until this one completes
+        // 在这个命令处理完之前不再接受新的命令
         child.wait(); 
     }
 }
@@ -80,6 +83,7 @@ fn main(){
 
         // everything after the first whitespace character 
         //     is interpreted as args to the command
+        // 第一个空白符之后的所有内容都视为命令的参数
         let mut parts = input.trim().split_whitespace();
         let command = parts.next().unwrap();
         let args = parts;
@@ -95,7 +99,7 @@ fn main(){
 ```
 
 ## shell 的内建功能
-* 事实证明， shell 不能简单的将某些命令分派给另一个进程。这些都是影响 shell 内部，所以，必须由 shell 本身实现。
+* 事实证明， shell 不能简单的将某些命令分派给另一个进程。还有一些逻辑是需要在 shell 内部提供，所以，必须由 shell 本身实现。
 * 最常见的例子可能就是 `cd` 命令。要了解为什么 cd 必须是 shell 的内建功能，请[查看这个链接](https://unix.stackexchange.com/a/38809)。处理内建的命令，实际上是一个名为 `cd` 的程序。[这里](https://unix.stackexchange.com/a/38819)有关于这种二象性的解释。
 * 下面我们添加 shell 内建功能 cd 功能到我们的 shell 中  
 
@@ -114,7 +118,7 @@ fn main(){
 
         match command {
             "cd" => {
-                // default to '/' as new directory if one was not provided
+                // 如果没有提供路径参数，则默认 '/' 路径
                 let new_dir = args.peekable().peek().map_or("/", |x| *x);
                 let root = Path::new(new_dir);
                 if let Err(e) = env::set_current_dir(&root) {
@@ -135,8 +139,8 @@ fn main(){
 ```
 
 ## 错误处理
-* 如果你看到这儿，你可能会发现，如果你输入一个不存在的命令，上面的 shell 将会崩溃。在下面的版本中，通过向用户输出一个错误，然后允许他们输入另一个命令，可以很好的处理这个问题。
-* 由于输入一个错误的命令是退出 shell 的一个简单方法，所以我还实现了另一个 shell 内建处理，也就是 `exit` 命令。
+* 如果你看到这儿，你可能会发现，如果你输入一个不存在的命令，上面的 shell 将会崩溃。在下面的版本中，通过给用户输出报错提示，然后允许他们输入一个新的命令，可以很好地解决这个问题。
+* 由于输入一个错误的命令是退出 shell 的一个简单方法，所以我还实现了另一个 shell 内建功能，也就是 `exit` 命令。
 
 ```rust
 fn main(){
@@ -165,7 +169,7 @@ fn main(){
                     .args(args)
                     .spawn();
 
-                // gracefully handle malformed user input
+                // 优雅地处理非正常输入
                 match child {
                     Ok(mut child) => { child.wait(); },
                     Err(e) => eprintln!("{}", e),
@@ -177,12 +181,12 @@ fn main(){
 ```
 
 ## 管道符
-* 如果没有管道操作符的功能的 shell 是很难用于实际生产环境的。如果你不熟悉这个特性，可以使用 `|` 字符告诉 shell 将第一个命令的结果输出重定向到第二个命令的输入。例如，运行 `ls | grep Cargo` 会触发以下操作：
+* 如果 shell 没有管道操作符的功能，是很难用于实际生产环境的。如果你不熟悉这个特性，可以使用 `|` 字符告诉 shell 将第一个命令的结果输出重定向到第二个命令的输入。例如，运行 `ls | grep Cargo` 会触发以下操作：
     * `ls` 将列出当前目录中的所有文件和目录
     * shell 将通过管道将以上的文件和目录列表输入到 `grep`
     * `grep` 将过滤这个列表，并只输出文件名包含字符 `Cargo` 的文件
 
-* shell 的最后一次迭代包括了对管道的基础支持。要了解管道和 IO 重定向的其他功能，可以[参考这个文章](https://robots.thoughtbot.com/input-output-redirection-in-the-shell)
+* 我们再对这个 shell 进行最后一次迭代，包括对管道的基础支持。要了解管道和 IO 重定向的其他功能，可以[参考这个文章](https://robots.thoughtbot.com/input-output-redirection-in-the-shell)
 
 ```rust
 fn main(){
@@ -194,6 +198,7 @@ fn main(){
         stdin().read_line(&mut input).unwrap();
 
         // must be peekable so we know when we are on the last command
+        // 必须是可以 peek 的，这样我们才能确定何时结束
         let mut commands = input.trim().split(" | ").peekable();
         let mut previous_command = None;
 
@@ -225,10 +230,12 @@ fn main(){
                     let stdout = if commands.peek().is_some() {
                         // there is another command piped behind this one
                         // prepare to send output to the next command
+                        // 在这个命令后还有另一个命令，准备将其输出到下一个命令
                         Stdio::piped()
                     } else {
                         // there are no more commands piped behind this one
                         // send output to shell stdout
+                        // 在发送输出到 shell 的 stdout 之后，就没有命令要执行了
                         Stdio::inherit()
                     };
 
@@ -251,6 +258,7 @@ fn main(){
 
         if let Some(mut final_command) = previous_command {
             // block until the final command has finished
+            // 阻塞一直到命令执行完成
             final_command.wait();
         }
 
