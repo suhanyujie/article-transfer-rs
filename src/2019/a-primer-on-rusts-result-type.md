@@ -5,6 +5,7 @@
 >* 原文作者：[Joe Kreydt](https://medium.com/@JoeKreydt?)
 >* 译文出处：https://github.com/suhanyujie/article-transfer-rs
 >* 译者：[suhanyujie](https://www.github.com/suhanyujie)
+>* tips：水平有限，翻译不当之处，还请指正，谢谢！
 
 * ![](https://miro.medium.com/max/2099/1*AoZOz1AJS15yyB3TLUn93A.jpeg)
 The Result type is the de facto way of handling errors in Rust, and it is clever; maybe too clever.
@@ -291,8 +292,10 @@ fn is_it_fifty(num: u32) -> Result<u32, &’static str> {
 ```
 
 In our declaration, we specify that the function will take a parameter named num that is a 32 bit unsigned integer type (u32). Next, we specify the function’s return type. It will return a Result. The type returned in the Result will be either u32 or a string literal (&’static str).
+>在我们的声明中，我们指定该函数接收一个名为 num 的参数，其类型是 32 位无符号整数类型（u32）。接下来，我们指定函数的返回值类型。表示函数会返回一个结果，类型是 u32 或字串（&'static str）
 
 Then, we enter the body of our _is_it_fifty()_ function.
+>然后，我们编写 _is_it_fifty()_ 函数的函数体。
 
 ```rust
 let error = “It didn’t work”;
@@ -304,28 +307,43 @@ if num == 50 {
 ```
 
 The code in the body is an if else expression. It evaluates the argument passed into the function.
+>函数体中的代码是一个 if else 表达式。它用于判断传入的参数。
+
 If it is 50, then the function will return the Result Ok. The Ok will contain the value that was passed into the function (_num_).
+>如果值是 50，那么函数将返回 Ok 的 Result。Ok 中将会包含传递给函数的值（_num_）。
 
 If the argument is anything other than 50, the function will return Result Err. The _Err_ will contain the value of the error variable which is, “It didn’t work.”
+>如果参数不是 50，函数将返回 Err 的 Result。_Err_ 会包含错误变量的值，也即 “It didn’t work.”
 
 Any time that function is used, the Result it returns must be handled. In our program, as with most Rust programs, that is done with a match expression. I described the match expression part earlier.
+>无论何时使用该函数，都必须处理它返回的 Result。在我们的程序中，与大多数 Rust 程序一样，是通过一个匹配表达式完成的。我在之前已经描述过匹配表达式的部分。
 
 The Result can also be handled with _unwrap()_ or _expect()_ — also explained earlier.
+>Result 类型可以使用 _unwrap()_ 或 _expect()_ 来处理 —— 前面也已经解释过。
 
 ![](https://miro.medium.com/max/480/1*ZLronSWbmj4IwGoWepecHQ.gif)
 
 ## Summing It All Up
+>总结
+
 Result is a type returned by a function that indicates whether the function ran successfully.
+>Result 是一个函数的返回类型，它表示函数是否成功运行。
 
 Many of Rust’s built-in functions return a Result, and when that is the case, there is no way to avoid it. If a function returns a Result, it must be handled.
+>Rust 的许多内置函数都是返回 Result 类型，如果是这样的话，就没有办法避开它。如果一个函数返回 Result，它必须要被妥善处理。
 
 Common ways of handling a Result are the _unwrap()_ function, the _expect()_ function, and a match expression.
+>处理 Result 常用的方法是使用 _unwrap()_ 和 _expect() 函数以及匹配表达式。
 
 It is possible to return a Result from your own functions. It is a great way of accounting for errors.
+>可以从自己定义的函数中返回 Result。这是处理错误的好办法。
 
 That’s pretty much all you need to know about Rust’s Result type, but in case you want to learn a bit more, or understand where I gathered my information, below is a list of the resources I used.
+>关于 Rust 的 Result 类型，你需要知道的就这些了，但是如果想了解更多信息，或者想知道我从哪儿收集的这些信息，可以参考下方的资源列表。
 
 ## Resources
+>资源
+
 * https://doc.rust-lang.org/std/result/
 * https://doc.rust-lang.org/1.2.0/book/match.html
     * See section: matching on enums
