@@ -28,8 +28,9 @@ In hopes of saving a few brains, I am going to explain Rust’s Result in plain 
 
 ## In Plain English
 >用英语简单的解释
+
 Result is a type returned by a function that can be either Ok or Err. If it is Ok, then the function completed as expected. If it is Err, then the function resulted in an error.
-Result 是一个函数返回的类型，它可以是 Err，也可以是 Err。如果是 Ok，则表示函数按照预期执行完成。如果是 Err，则该函数出现了错误。
+>Result 是一个函数返回的类型，它可以是 Err，也可以是 Err。如果是 Ok，则表示函数按照预期执行完成。如果是 Err，则该函数出现了错误。
 
 # What does Result do? 
 >Result 用来做什么？
