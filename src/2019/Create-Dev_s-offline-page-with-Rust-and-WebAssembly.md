@@ -6,7 +6,7 @@
 >* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
->* 翻译不当之处，还请指出，谢谢！
+>* tips：水平有限，翻译不当之处，还请指正，谢谢！
 >* 文中的页面效果可以参考这里：[离线画图页](https://dev.to/offline)
 
 Dev 网站的[离线画图页](https://dev.to/offline)很有趣。我们能用 Rust 和 WebAssembly 来实现吗？

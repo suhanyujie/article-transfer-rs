@@ -6,6 +6,7 @@
 >* 译文出自：https://github.com/suhanyujie/article-transfer-rs
 >* 本文永久链接： https://github.com/suhanyujie/article-transfer-rs/blob/master/src/2019/Build_Your_Own_Shell_using_Rust.md
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
+>* tips：水平有限，翻译不当之处，还请指正，谢谢！
 
 * 这是一个使用 Rust 构建自己的 shell 的教程，已经被收录在 [build-your-own-x](https://github.com/danistefanovic/build-your-own-x) 列表中。自己创建一个 shell 是理解 shell、终端模拟器、以及 OS 等协同工作的好办法。
 
