@@ -8,13 +8,17 @@
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 
 I recently went to a job interview (I’m looking for work, by the way; hire me!) and one of the questions put to me was “solve the [Boggle™](https://shop.hasbro.com/en-us/product/boggle:7EB3363D-5056-9047-F5B7-DC51516DFE25) board.” I don’t think I did very well on the question and it wasn’t until I got home that I remembered “Dammit, the fastest structure for checking if a word is in a dictionary is a trie!”
+>我最近参加了一个工作面试（顺便说一下，我正在找工作；欢迎给我发面试邀请！）并且其中有一个问题是解决 [Boggle™](https://shop.hasbro.com/en-us/product/boggle:7EB3363D-5056-9047-F5B7-DC51516DFE25)。我想我对这个问题并不擅长，直到我回到家我才意识到“该死，查词的最快方式就是使用 trie 结构啊！”。
 
 Whiteboard exercises are terrible. I don’t think I’ve ever actually programmed a trie, not even in Data Structures class I took way back in college in 19mumblemumble. I’m sure I’ve used them, but I’ve never had to write one.
+>白板练习不是好办法。我想我之前从未有编写过 trie 相关程序的经验，甚至 19 世纪在大学里参加的数据结构课程上也没有过。我知道我用过，但从来没有去实现过。
 
 ## So what is a trie?
+>trie 是什么？
 ![](./images08/triegraph-300x142.png)
 
 A [trie](https://en.wikipedia.org/wiki/Trie) is a data structure that encodes _every word_ in a dictionary as a string of nodes, one per letter. This trie encodes the dictionary containing the words “a”, “an,” “ant”, “art”, and “aunt”. If we’re looking up “ant,” we start at the root node and traverse to “a”, then “n”, and then “t”. The “t” is double-circled, that is, it’s marked as a terminal node, and thus “ant” is in this dictionary. If we were looking up the word “any”, we would get to “a,n,” and then fail, because “any” is not in this dictionary. Likewise, we might ask if “aun” is in the dictionary, and we would get to “a,u,n,” but that “n” is not double-circled, and thus “aun” is also not a complete word in this dictionary.
+>[trie](https://en.wikipedia.org/wiki/Trie) 是一种数据结构，它将字典中的 _每个单词_ 编码为一个节点字符，每个字母一个。例如 trie 可以对这样一个字典编码，该字典包含 `a`，`an`，`ant`，`art` 和 `aunt`。如果我们查找 `ant`，我们从根节点开始，遍历到 `a`，然后是 `n`，然后是 `t`。`t` 是“双圈”的，也就是说，它被标记为终端节点，因此 `ant` 在这个字典中的。如果查询单词 `any`，我们会查到 `a`、`n`，然后失败，因为 `any` 并不在字典中。同样的，我们还能查询 `aun` 是否在字典中，我们会查询到 "a, u, n"，但那个 `n` 不是“双圈”的，因此 `aun` 在字典里不是一个完整的单词。
 
 Like a [regular expression](https://github.com/elfsternberg/riggedregex), a trie search is successful when the string is exhausted, the trie is still active, and we find ourselves on a node marked as a word terminator. If the trie exhausts before the string, or if the string exhausts on a non-terminating node, the search fails to find a complete word.
 
