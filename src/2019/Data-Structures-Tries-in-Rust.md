@@ -1,11 +1,11 @@
 # Data Structures: Tries in Rust
-# Data Structures: Tries in Rust 译文
 
+>* Data Structures: Tries in Rust 译文
 >* 原文地址：https://elfsternberg.com/2019/08/05/data-structures-tries-in-rust/
 >* 原文作者：[Elf Sternberg](https://github.com/elfsternberg)
 >* 译文出自：https://github.com/suhanyujie/article-transfer-rs
->* 本文永久链接： 
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
+>* tips：水平有限，翻译不当之处，还请指正，谢谢！
 
 I recently went to a job interview (I’m looking for work, by the way; hire me!) and one of the questions put to me was “solve the [Boggle™](https://shop.hasbro.com/en-us/product/boggle:7EB3363D-5056-9047-F5B7-DC51516DFE25) board.” I don’t think I did very well on the question and it wasn’t until I got home that I remembered “Dammit, the fastest structure for checking if a word is in a dictionary is a trie!”
 >我最近参加了一个工作面试（顺便说一下，我正在找工作；欢迎给我发面试邀请！）并且其中有一个问题是解决 [Boggle™](https://shop.hasbro.com/en-us/product/boggle:7EB3363D-5056-9047-F5B7-DC51516DFE25)。我想我对这个问题并不擅长，直到我回到家我才意识到“该死，查词的最快方式就是使用 trie 结构啊！”。
