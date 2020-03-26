@@ -33,13 +33,14 @@ For a canonical dictionary lookup, this implementation is different the Wikipedi
 >对于一个规范的字典查找功能，这种实现与维基百科页面的描述不同。维基百科所描述的是对于没有存储节点值的实用程序；我们通过查询所到达的键是什么来了解对应的值！我们需要这个节点是否是终止节点（叶子节点）。
 
 There are strong feelings about tuples vs structs for values with multiple fields, with most people preferring structs.  For a value with two fields, I feel a tuple ought to be adequate.  A record with so many fields it has to name them, and therefore a struct, has a code smell and is worth examining closely for cognitive complexity.  I’ll address that in the next post.
->对于具有多个字段的值，元组和结构体会更合适，大多数人更喜欢结构体。对于只有两个字段的值，我认为元组是可以满足要求的。一个记录如果有很多字段，那么必须给这些字段命名，因此一段有结构体中，可能会增加一定的复杂度，需要仔细检查代码。我将在下一篇解决这个问题。
+>对于具有多个字段的值，元组和结构体相比，大多数人更喜欢结构体。对于只有两个字段的值，我认为元组是可以满足要求的。一个记录如果有很多字段，那么必须给这些字段命名，因此这是应该使用结构体，在合适的场景使用合适的代码方案，需要仔细推敲。我将在下一篇解决这个问题。
 
 ```rust
 pub struct Node(HashMap<char, Box<RefCell<Node>>, bool);
 ```
 
 For this structure, we’re going to build it imperatively; that is, each word will be presented to the structure one at a time, and each word will be an iterator over its characters. The first thing we need to do is say, for a given node, if the word is exhausted, then we are a terminator node:
+>对于这个结构体，我们将声明式地构建它；也就是说，每个单词将会呈现在结构体中，每个单词就是字符迭代器的结果。我们需要做的一件事是，对于给定的节点，如果这个词已经迭代完毕，那么此时就是一个终止节点：
 
 ```rust
 impl Node {
@@ -54,8 +55,10 @@ impl Node {
 ```
 
 Note that we’re returning from this function if we’re a terminator. There is no character to insert into the next node.
+>记住，如果到达了终结符，我们就要从这个函数中进行 return 了。即使没有要插入下一个节点的字符。
 
 If we’re not a terminator, we must then either access or create a child node, and then keep traversing the word until its exhausted. In the “create a new child” scenario, we create the full trie before inserting it.
+>如果不是终结符，那么我们就必须访问或创建一个子节点，然后继续遍历这个单词，知道它结束。在“创建新的子节点”时，我们在插入前创建了完整的 trie。
 
 ```rust
         match self.0.get(&c) {
@@ -72,8 +75,10 @@ If we’re not a terminator, we must then either access or create a child node, 
 ```
 
 One tricky feature of Boggle™ is that we want to end a search for a word early if the “word” found isn’t really a word. That is, if on the board you find the sequence “tk”, no word starts with “tk” and you want the search to terminate early. But as in our example above, “aun” is also not a word, but we do not want to terminate the search, as there may be a handy ‘t’ nearby to finish the word.
+>Boggle™ 的一个棘手特性是，如果发现的单词并不是查找的目标单词，我们希望尽快结束对单词的搜索。也就是说，例如，你需要找到序列“tk”，而没有单词是“tk”开头的，希望此次搜索尽快结束。但是在我们上面的例子中，“aun” 也不是一个单词，但是我们不想终止搜索，因为相近地可能有一个便捷的 “t” 来完成这个词的搜索。
 
 So we want to be able to search the trie, but we have two different criteria: “is this a word” and “_could_ this be the prefix of a word?” We want our search engine to be able to handle both.
+>因此我们希望能够这个 trie，但我们有两个不同的标准：“这是一个单词吗？”和“这 _会_ 是一个次的前缀吗？”我们希望我们的搜索引擎能够处理这两个问题。
 
 How do we handle both? Let’s go back: what are the failure conditions? The trie gets exhausted _or_ the string gets exhausted. If both are exhausted at the same time and we’re on a terminator, it’s a word. If the word is exhausted but the trie is not, this is a prefix, regardless of its terminator status.
 
