@@ -1,4 +1,5 @@
 # Data Structures: Tries in Rust
+>数据结构：用 Rust 实现 Tries
 
 >* Data Structures: Tries in Rust 译文
 >* 原文地址：https://elfsternberg.com/2019/08/05/data-structures-tries-in-rust/
@@ -81,10 +82,13 @@ So we want to be able to search the trie, but we have two different criteria: �
 >因此我们希望能够这个 trie，但我们有两个不同的标准：“这是一个单词吗？”和“这 _会_ 是一个次的前缀吗？”我们希望我们的搜索引擎能够处理这两个问题。
 
 How do we handle both? Let’s go back: what are the failure conditions? The trie gets exhausted _or_ the string gets exhausted. If both are exhausted at the same time and we’re on a terminator, it’s a word. If the word is exhausted but the trie is not, this is a prefix, regardless of its terminator status.
+>我们如何处理这两个条件呢？我们先回顾一下：什么情况下条件失效？trie 搜完了 _或_ 字符串消耗完了。如果这两者同时耗尽，我们此时的查询已经结束，结果就是查询到的词。如果单词已耗尽，但 trie 没有，则无论其终止状态如何，结果都只是一个词的前缀。
 
 So, our search feature will be a recursive function that, letter by letter, transits the trie node by node. If the word exhausts and we’re still in the trie, we check the end state (always `true` for a prefix, `is a terminator` for a word), otherwise we recurse down to the next letter and the next node.
+>所以，我们的搜索特性之一是递归函数，一个字母一个字母地将节点参数传递给 trie。如果单词用完了，而我们仍然在 trie 中，我们将检查结束状态（前缀是 true，如果是单词则为 `is a terminator`），否则我们将递归到下一个字母和节点。
 
 First, let’s see what we do if we run out of word. For the endstate, we’re going to pass it a function that says what to do when we run out of word:
+>首先，我们先看看如果字符用完了，我们怎么办。对于 endstate，我们会传递给它一个函数，告诉它我们此时该如何处理（回调）：
 
 ```rust
 fn search(&self, word: &mut Iterator<Item = char>, endstate: &Fn(&Node) -> bool) -> bool {
@@ -95,8 +99,10 @@ fn search(&self, word: &mut Iterator<Item = char>, endstate: &Fn(&Node) -> bool)
 ```
 
 Note that it’s not `pub`! This is the `search` function, but it’s going to be invoked by the functions that make the distinction between finding a word and affirming a prefix. Flags are a code smell, and to the extent that you use them, they should never be accessible to client code.  Search, by the way, is completely immutable with respect to the structure being searched; only the word is mutating as we iterate through it, and the per-search recursion is wholly stacked based.  Once built, the trie could be safely used by multiple threads without the need for locking mechanisms.
+>注意，它不是 `pub` 的！这是 `search` 函数，但它将被区分查找是单词还是前缀的函数调用。标志是一种代码气味，在你使用它们的范围内，它们不应该被客户端代码访问。顺便说一下，对于搜索的结构来说，整个过程数据是不可变的；只有这个词在我们遍历它时发生了变化，每个搜索递归是基于栈的。一旦构建完成，trie 就可以被多个线程安全地使用，而不需要使用锁机制。
 
 Finally, if the trie is not exhausted, we try to get the child node, passing the `endstate` handler forward:
+最后，如果 trie 没有被耗尽，我们尝试获取子节点，并向前传递处理 `endstate` 的回调程序：
 
 ```rust
        match self.0.get(&c) {
@@ -107,6 +113,7 @@ Finally, if the trie is not exhausted, we try to get the child node, passing the
 ```
 
 And the two functions, `find` and `prefix`:
+>还有两个函数，`find` 和 `prefix`：
 
 ```rust
     pub fn find(&self, word: &mut Iterator<Item = char>) -> bool {
@@ -119,6 +126,7 @@ And the two functions, `find` and `prefix`:
 ```
 
 And finally, the constructor. We create a new, empty node, and then we insert words into the trie, using that node as the root of the dictionary. The root node is never a terminator.
+>最后是构造函数。我们创建一个新的空节点，然后将单词插入 trie，使用该节点作为字典的根节点。根节点从来都不是终结符。
 
 ```rust
     pub fn new() -> Node {
@@ -128,9 +136,13 @@ And finally, the constructor. We create a new, empty node, and then we insert wo
 ```
 
 And that’s it. That’s the whole of a trie, just two functions: a builder and a searcher. I had one special need (whole word vs prefix), but that was handled by using a distinguishing function as a flag on the semantics of the search.
+>就是这样。这就形成了整个 trie，只有两个功能：构造器和搜索器。我还有一个特殊的需求（整个单词还是前缀），但这是通过使用一个可区分的函数作为搜索语义的标志来处理的。
 
 Tries are a fun data structure. This version is pretty memory-heavy; it might be possible, for those cases where a word prefix has only one child, to pack them into a denser structure. The cost of running the discriminator versus a win on space density might even be worth it.
+>Tries 是一个有趣的数据结构。这个版本的内存非常大；对于单词前缀只有一个子元素的情况，可以将它们打包成更密集的结构。运行“鉴别器”的成本与空间密度上的成功可能是值得的。
 
 But if you have a finite dictionary, even one as big as the Scrabble™ legal words list (178,960 words as of 2012), a trie is the fastest data structure for determining if a string of letters is a real word, or possibly the prefix of a real word.
+>但是如果你有一个有限的字典，即使像 Scrabble™ legal words（截止2012年有178，960个单词）这样大的字典，trie 是判断一串字母是否是一个真实单词或一个前缀的最快数据结构。
 
 All of this code is [available on my Github](https://github.com/elfsternberg/boggle-solver/blob/master/src/trie.rs), and licensed under the [Mozilla Public License v. 2.0](https://www.mozilla.org/en-US/MPL/2.0/).  The code on Github is a little more generic, and will work with both `char` and `byte` strings.
+>所有这些代码都可以在我的 [Github](https://github.com/elfsternberg/boggle-solver/blob/master/src/trie.rs) 找到，并在[ Mozilla 公共许可证v. 2.0](https://www.mozilla.org/en-US/MPL/2.0/)下获得许可。Github 的代码更通用一些，可以同时处理 `char` 和 `byte` 字符串。
