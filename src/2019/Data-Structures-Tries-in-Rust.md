@@ -12,23 +12,23 @@ I recently went to a job interview (I’m looking for work, by the way; hire me!
 >我最近参加了一个工作面试（顺便说一下，我正在找工作；欢迎给我发面试邀请！）并且其中有一个问题是解决 [Boggle™](https://shop.hasbro.com/en-us/product/boggle:7EB3363D-5056-9047-F5B7-DC51516DFE25)。我想我对这个问题并不擅长，直到我回到家我才意识到“该死，查词的最快方式就是使用 trie 结构啊！”。
 
 Whiteboard exercises are terrible. I don’t think I’ve ever actually programmed a trie, not even in Data Structures class I took way back in college in 19mumblemumble. I’m sure I’ve used them, but I’ve never had to write one.
->白板练习不是好办法。我想我之前从未有编写过 trie 相关程序的经验，甚至 19 世纪在大学里参加的数据结构课程上也没有过。我知道我用过，但从来没有去实现过。
+>白板练习不是好办法。我想我之前从未有编写过 trie 相关程序的经验，甚至 19 届（19mumblemumble 如何翻译？）的大学中参加的数据结构课程上也没有过。我知道我用过，但从来没有去实现过。
 
 ## So what is a trie?
 >trie 是什么？
 ![](./images08/triegraph-300x142.png)
 
 A [trie](https://en.wikipedia.org/wiki/Trie) is a data structure that encodes _every word_ in a dictionary as a string of nodes, one per letter. This trie encodes the dictionary containing the words “a”, “an,” “ant”, “art”, and “aunt”. If we’re looking up “ant,” we start at the root node and traverse to “a”, then “n”, and then “t”. The “t” is double-circled, that is, it’s marked as a terminal node, and thus “ant” is in this dictionary. If we were looking up the word “any”, we would get to “a,n,” and then fail, because “any” is not in this dictionary. Likewise, we might ask if “aun” is in the dictionary, and we would get to “a,u,n,” but that “n” is not double-circled, and thus “aun” is also not a complete word in this dictionary.
->[trie](https://en.wikipedia.org/wiki/Trie) 是一种数据结构，它将字典中的 _每个单词_ 编码为一个节点字符，每个字母一个。例如 trie 可以对这样一个字典编码，该字典包含 `a`，`an`，`ant`，`art` 和 `aunt`。如果我们查找 `ant`，我们从根节点开始，遍历到 `a`，然后是 `n`，然后是 `t`。`t` 是“双圈”的，也就是说，它被标记为终端节点，因此 `ant` 在这个字典中的。如果查询单词 `any`，我们会查到 `a`、`n`，然后失败，因为 `any` 并不在字典中。同样的，我们还能查询 `aun` 是否在字典中，我们会查询到 "a, u, n"，但那个 `n` 不是“双圈”的，因此 `aun` 在字典里不是一个完整的单词。
-1
+>[trie](https://en.wikipedia.org/wiki/Trie) 是一种数据结构，它将字典中的 _每个单词_ 编码为一个节点字符，每个字母一个。例如 trie 可以将一个字典编码为包含 `a`，`an`，`ant`，`art` 和 `aunt` 的 trie。如果我们查找 `ant`，我们从根节点开始，遍历到 `a`，然后是 `n`，然后是 `t`。`t` 是“双圈”的，也就是说，它被标记为终端节点，因此 `ant` 在这个字典中的。如果查询单词 `any`，我们会查到 `a`、`n`，然后失败，因为 `any` 并不在字典中。同样的，我们还能查询 `aun` 是否在字典中，我们会查询 "a, u, n"，但那个 `n` 不是“双圈”的，因此 `aun` 在字典里不是一个完整的单词。
+
 Like a [regular expression](https://github.com/elfsternberg/riggedregex), a trie search is successful when the string is exhausted, the trie is still active, and we find ourselves on a node marked as a word terminator. If the trie exhausts before the string, or if the string exhausts on a non-terminating node, the search fails to find a complete word.
->与[正则表达式](https://github.com/elfsternberg/riggedregex)类似，一次成功的 trie 搜索意味着在字符串匹配完时 trie 的状态仍然是激活（匹配成功）状态，我们会发现此时处于一个标记为词的终结符节点上。如果 trie 在字符串之前匹配完，或者在一个非终结符节点上结束，则意味着此次搜索将无法找到一个完整的单词。
+>与[正则表达式](https://github.com/elfsternberg/riggedregex)类似，一次成功的 trie 搜索意味着在字符串匹配完时 trie 的状态仍然是激活（匹配成功）状态，我们会发现此时处于一个标记为词的终端节点上。如果 trie 在字符串之前匹配完，或者在一个非终结符节点上结束，则意味着此次搜索将无法找到一个完整的单词。
 
 The [rules of Boggle™](https://en.wikipedia.org/wiki/Boggle) are very simple: on a 4×4 grid, sixteen dice are shaken and dropped into place. Each die has six letters on it, probabilistically arranged. Players have three minutes to find every valid word on the board, where “valid” means “found in the dictionary the players have agreed to use,” modulo some rules like “no contractions or abbreviations.” The letters of the words must be adjacent in any of the eight cardinal directions (modulo the borders of the grid), and no letter may be used twice for the same word.
->[Boggle™ 规则](https://en.wikipedia.org/wiki/Boggle)非常简单：在一个 4*4 的网格中，摇动 16 个骰子并将其放在适当的位置。每个骰子有 6 个单词，按概率排列。玩家有三分钟的时间正确地找出黑板上预先写好的所有单词，正确的意思是“在字典中找到的，并且是玩家认同的”，以一些规则为模组，如“禁止缩写”。单词的字母必须在相邻的八个基本方向中（以网格的边框为模型），同一个单词不能有两个一样的字母。
+>[Boggle™ 规则](https://en.wikipedia.org/wiki/Boggle)非常简单：在一个 4*4 的网格中，摇动 16 个骰子并将其放在适当的位置。每个骰子有 6 个字母，按概率排列。玩家有三分钟的时间正确地找出黑板上预先写好的所有单词，正确的意思是“在字典中找到的，并且是玩家认同的”，以一些规则为模组，如“禁止缩写”。组成单词的字母必须在相邻的八个基本方向中（以网格的边框为模型），同一个单词不能有两个一样的字母。
 
 So, to solve for Boggle, we need a fast lookup dictionary, and thus we need a trie. Tries are extremely fast, Ο(n) where `n` is the length of the word. They’re memory-intensive, but these days memory is cheaper than time. Each node has two conditions: the list of letters that it leads to, and whether or not it is a terminal node. For the “list of letters,” we’re going to use a [HashMap](https://doc.rust-lang.org/std/collections/struct.HashMap.html). The child nodes must be [Boxed](https://doc.rust-lang.org/std/boxed/struct.Box.html) as we’re building this on the heap (it will be _huge_ for a full-sized dictionary) and it must be [RefCell](https://doc.rust-lang.org/std/cell/struct.RefCell.html) because we’ll be mutating child nodes repeatedly as we build the trie.
->因此，为了玩好 Boggle，我们需要一个可以快速查找的字典，也就是 trie。Tries 是非常快的，它的时间复杂度 Ο(n) 中的 `n` 是指词的数量。它需要很多内存，担心现在内存比时间更便宜。每个节点都有两个条件：它指向的字母列表，并且它是否是终端节点。对于“字母列表”，我们使用 [HashMap](https://doc.rust-lang.org/std/collections/struct.HashMap.html)。子节点必须是 [Boxed](https://doc.rust-lang.org/std/boxed/struct.Box.html)，我们将其构建在堆上（它是一个 _巨大的_ 全尺寸的字典），它必须使用 [RefCell](https://doc.rust-lang.org/std/cell/struct.RefCell.html)，因为我们会反复地使用子节点构建 trie。
+>因此，为了玩好 Boggle，我们需要一个可以快速查找的字典，也就是 trie。Tries 是非常快的，它的时间复杂度 Ο(n) 中的 `n` 是指词的数量。它需要很多内存，但现在内存比时间更便宜。每个节点都有两个条件：它指向的字母列表，并且它是否是终端节点。对于“字母列表”，我们使用 [HashMap](https://doc.rust-lang.org/std/collections/struct.HashMap.html)。子节点必须是 [Boxed](https://doc.rust-lang.org/std/boxed/struct.Box.html)，我们将其构建在堆上（它是一个 _巨大的_ 全尺寸的字典），它必须使用 [RefCell](https://doc.rust-lang.org/std/cell/struct.RefCell.html)，因为我们会反复地使用子节点构建 trie。
 
 For a canonical dictionary lookup, this implementation is different the Wikipedia page’s description.  There’s no utility to storing the node’s value in itself; we know what the value is by the key we used to reach it!  We do need to know if the node is a terminator node.
 >对于一个规范的字典查找功能，这种实现与维基百科页面的描述不同。维基百科所描述的是对于没有存储节点值的实用程序；我们通过查询所到达的键是什么来了解对应的值！我们需要这个节点是否是终止节点（叶子节点）。
