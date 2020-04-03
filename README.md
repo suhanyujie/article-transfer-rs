@@ -15,12 +15,17 @@
 * [【译】学习写解析器组合器](src/2019/Learning-Parser-Combinators-With-Rust.md)
 * [【译】用`Wasmer`进行插件开发](src/using_wasmer_for_plugins)
 
+## plan
+- [https://blog.yoshuawuyts.com/state-machines/](https://blog.yoshuawuyts.com/state-machines/)
+
 ## 规范
 ### 文件名
 * 文章的名称是英文的，并且特殊字符使用 `-` 替代，可以使用正则 `(:\s+|\ +)`，将特殊字符替换为 `-`
 
 ## 一些文档翻译
 ### PHP7 内核 [PHP Internals Book](./src/PHP-Internals-Book)
+- 目前这本 PHP 内核已经被社区发起翻译计划了，基本上翻译完成，[点此查看](https://learnku.com/docs/php-internals/php7)
+
 #### 翻译招募
 * 内容篇幅多，希望有志之士一同参与翻译。有意向请提 issue 告知。谢谢！
 
