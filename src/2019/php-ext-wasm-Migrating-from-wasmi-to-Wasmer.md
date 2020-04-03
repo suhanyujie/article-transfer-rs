@@ -1,11 +1,10 @@
-# 【译】php-ext-wasm：从 wasmi 迁移到 Wasmer
+# 【译】php-ext-wasm：从 wasmi 切换到 Wasmer
 >php-ext-wasm: Migrating from wasmi to Wasmer 译文
 
 >* 原文地址：https://medium.com/wasmer/php-ext-wasm-migrating-from-wasmi-to-wasmer-4d1014f41c88
 >* 原文仓库：https://github.com/wasmerio/php-ext-wasm
 >* 原文作者：[Ivan Enderlin](https://medium.com/@hywan)
 >* 译文出自：https://github.com/suhanyujie/article-transfer-rs
->* 本文永久链接：（缺省）
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 >* 翻译不当之处，还请指出，谢谢！
 >* 这是一个 PHP 扩展相关的文章，结合了 Rust WebAssembly PHP 等前沿的技术，旨在给开发者更多的参考和思路。
@@ -14,7 +13,7 @@
 
 开头我开了一个玩笑，现在我开始将 [`php-ext-wasm`](https://github.com/wasmerio/php-ext-wasm) 作为一个真正的产品来开发：一个可以执行 [WebAssembly](https://webassembly.org/) 二进制文件的 PHP 扩展。
 
-PHP 虚拟机（VM）即 [Zend Engine](https://github.com/php/php-src/)。要编写扩展，需要使用 C 或者 C++ 进行开发。扩展是 Rust 实现的简单的 C 绑定库。当时，这个 Rust 库使用 [wasmi](https://github.com/paritytech/wasmi) 作为 WebAssembly 的虚拟机。我知道 `wasmi` 不是这个场景中最快的 WebAssembly 虚拟机，但它的 API 是可靠的、经过测试的、编译速度快，并且易于 hack。基于这些，我们开始写一个项目吧!
+PHP 虚拟机（VM）即 [Zend Engine](https://github.com/php/php-src/)，要编写扩展，需要使用 C 或者 C++ 进行开发。扩展是 Rust 实现的简单的 C 绑定库。当时，这个 Rust 库使用 [wasmi](https://github.com/paritytech/wasmi) 作为 WebAssembly 的虚拟机。我知道 `wasmi` 不是这个场景中最快的 WebAssembly 虚拟机，但它的 API 是可靠的、经过测试的、编译速度快，并且易于 hack。基于这些，我们开始写一个项目吧!
 
 经过 6 小时的开发，我得到了一些有用的东西。可以运行以下 PHP 程序：
 
@@ -54,14 +53,14 @@ pub extern fn sum(x: i32, y: i32) -> i32 {
 
 不过，它证实了我的第一直觉：早我们的例子中，`wasmi` 确实可以很好的模拟一些东西，但它还不够快，不符合我们的预期。
 
-## 再快写些，再快写些，再快写些……
+## 再快些，再快些，再快些……
 从一开始我就想使用 [Cranelift](https://github.com/CraneStation/cranelift)。它是一个代码生成器，类似于 [LLVM](http://llvm.org/)（别介意我用这种简写，我们的目标不是详细解释 Cranelift，但它确实是一个很好的项目！）引用项目本身的描述：
 
 >Cranelift 是一个底层的可重定向的代码生成器。它将[与目标无关的中间表示形式]转换为可执行的机器码。
 
 这基本上意味着可以使用 Cranelift API 生成可执行代码。
 
-这个方案很不错！基于 Cranelift 带来的好处,我可以用它替换 `wasmi`。但是，还有其他方法可以获得更快的代码执行速度 —— 但代价是需要更长的时间编译和调试代码。
+这个方案很不错！基于 Cranelift 带来的好处，我可以用它替换 `wasmi`。但是，还有其他方法可以获得更快的执行速度 —— 但代价是需要更长的时间来编译和调试代码。
 
 例如，LLVM 可以提供非常快的代码执行速度，几乎可以达到机器码的执行速度。或者我们可以动态生成汇编代码。有很多方法可以做到这一点。假如一个项目可以提供一个具有多个后端 WebAssembly 虚拟机的方法，该怎么办？
 
@@ -88,7 +87,7 @@ Wasmer provides more features, like module caching. Those features are now inclu
 >Wasmer 提供了很多特性，比如模块缓存。这些特性现在包含在 PHP 扩展中。启动 `nbody.wasm` 文件（19 kb），耗时 4.2ms。启动，我的意思是：从文件中读取 WebAssembly 二进制文件，解析、校验、将它编译为可执行代码以及 WebAssembly 模块结构。
 
 PHP execution model is: starts, runs, dies. Memory is freed for each request. If one wants to use `php-ext-wasm`, you don’t really want to pay that “booting cost” every time.
->PHP 执行的流程是：开始，运行，终止。为每个请求释放内存。如果有人想用 `php-ext-wasm`，那他一定不会希望每次都付出这么大的“启动开销”。
+>PHP 执行的流程是：开始，运行，终止。并为每个请求释放内存。如果有人想用 `php-ext-wasm`，那他一定不会希望每次都付出这么大的“启动开销”。
 
 Hopefully, wasmer-runtime-c-api now provides a module serialization API, which is integrated into the PHP extension itself. It saves the “booting cost”, but it adds a “deserialization cost”. That second cost is smaller, but still, we need to know it exists.
 >幸运的是，wasmer-runtime-c-api 现在提供了一个模块序列化的 API，它集成到 PHP 的扩展中。它可以节省“启动成本”，但会增加“反序列化成本”。第二种成本相对更小，但我们仍然要清楚它的存在。
@@ -103,10 +102,10 @@ Now it takes 4.2ms for the first boot of `nbody.wasm` and 0.005ms for all the ne
 > 结论
 
 Wasmer is a young — but mature — framework to build WebAssembly runtimes on top of. The default backend is Cranelift, and it shows its promises: It brings a correct balance between compilation time and execution time.
->Wasmer 是一个年轻但成熟的框架，我们可以在它的基础上构建 WebAssembly 运行时。默认后端使用的是 Cranelift，它的优势是：在编译时间和执行时间之间带来了比较好的平衡。
+>Wasmer 是一个年轻并且成熟的框架，我们可以在它的基础上构建 WebAssembly 运行时。默认后端使用的是 Cranelift，它的优势是：在编译时间和执行时间之间带来了比较好的平衡。
 
 `wasmi` has been a good companion to develop a Proof-Of-Concept. This library has its place in other usages though, like very short-living WebAssembly binaries (I’m thinking of Ethereum contracts that compile to WebAssembly for instance, which is one of the actual use cases). It’s important to understand that no runtime is better than another, it depends on the use case.
->`wasmi` 是一个比较好的开发概念验证的产物。不过，这个库在其他用法中也有自己的定位，比如短生命周期的 WebAssembly 二进制文件（例如，我考虑的是编译到 WebAssembly 的 Ethereum 契约，这是实际场景之一）。了解没有一个运行时比另一个更好是很重要的，这取决于你的场景或测试用例。
+>`wasmi` 是一个比较好的开发概念验证的产物。不过，这个库在其他用法中也有自己的定位，比如短生命周期的 WebAssembly 二进制文件（例如，我考虑的是编译到 WebAssembly 的 Ethereum 契约，这是实际场景之一）。要知道没有一个运行时会比另一个更好是很重要的，这取决于你的场景或测试用例。
 
 The next step is to stabilize `php-ext-wasm` to release a 1.0.0 version.
 >下一步是稳定版的 `php-ext-wasm`，即发布 1.0.0 版本。
