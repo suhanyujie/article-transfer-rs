@@ -82,23 +82,37 @@ Wasmer 是一些 Rust 库（叫做 crate）组成的。甚至有一个 `wasmer-r
 最后，PHP 扩展的方案的测试结果显示性能比原生 PHP 代码更好！`php+wasmer(cranelift)` 很明显比 `php` 快 8.6 倍。比 `php+wasmi` 快 28.6 倍。有方案能达到机器码速度（这里代表 `rust-baseline`）吗？很有可能是 LLVM。这是另一篇文章的内容。我现在很高兴使用了 Cranelift。（看[我们之前的博客文章，了解如何在 Wasmer 和其他 WebAssembly 运行时测试不同的后端](https://medium.com/wasmer/benchmarking-webassembly-runtimes-18497ce0d76e)。）
 
 ## More Optimizations
+>持续优化
+
 Wasmer provides more features, like module caching. Those features are now included in the PHP extension. When booting the `nbody.wasm` file (19kb), it took 4.2ms. By booting, I mean: reading the WebAssembly binary from a file, parsing it, validating it, compiling it to executable code and a WebAssembly module structure.
+>Wasmer 提供了很多特性，比如模块缓存。这些特性现在包含在 PHP 扩展中。启动 `nbody.wasm` 文件（19 kb），耗时 4.2ms。启动，我的意思是：从文件中读取 WebAssembly 二进制文件，解析、校验、将它编译为可执行代码以及 WebAssembly 模块结构。
 
 PHP execution model is: starts, runs, dies. Memory is freed for each request. If one wants to use `php-ext-wasm`, you don’t really want to pay that “booting cost” every time.
+>PHP 执行的流程是：开始，运行，终止。为每个请求释放内存。如果有人想用 `php-ext-wasm`，那他一定不会希望每次都付出这么大的“启动开销”。
 
 Hopefully, wasmer-runtime-c-api now provides a module serialization API, which is integrated into the PHP extension itself. It saves the “booting cost”, but it adds a “deserialization cost”. That second cost is smaller, but still, we need to know it exists.
+>幸运的是，wasmer-runtime-c-api 现在提供了一个模块序列化的 API，它集成到 PHP 的扩展中。它可以节省“启动成本”，但会增加“反序列化成本”。第二种成本相对更小，但我们仍然要清楚它的存在。
 
 Hopefully again, Zend Engine has an API to get persistent in-memory data between PHP executions. `php-ext-wasm` supports that API to get persistent modules, et voilà.
+>更加幸运的是，Zend 引擎提供了 API 用于在 PHP 执行之间获取持久的内存数据。`php-ext-wasm` 支持通过这个 API 来获取持久化的模块，等等。
 
 Now it takes 4.2ms for the first boot of `nbody.wasm` and 0.005ms for all the next boots. It’s 840 times faster!
+>现在，它在 `nbody.wasm` 启动阶段花费了 4.2ms，并且用了  0.005ms 进行后续的操作。它快了约 840 倍！
 
 ## Conclusion
+> 结论
+
 Wasmer is a young — but mature — framework to build WebAssembly runtimes on top of. The default backend is Cranelift, and it shows its promises: It brings a correct balance between compilation time and execution time.
+>Wasmer 是一个年轻但成熟的框架，我们可以在它的基础上构建 WebAssembly 运行时。默认后端使用的是 Cranelift，它的优势是：在编译时间和执行时间之间带来了比较好的平衡。
 
 `wasmi` has been a good companion to develop a Proof-Of-Concept. This library has its place in other usages though, like very short-living WebAssembly binaries (I’m thinking of Ethereum contracts that compile to WebAssembly for instance, which is one of the actual use cases). It’s important to understand that no runtime is better than another, it depends on the use case.
+>`wasmi` 是一个比较好的开发概念验证的产物。不过，这个库在其他用法中也有自己的定位，比如短生命周期的 WebAssembly 二进制文件（例如，我考虑的是编译到 WebAssembly 的 Ethereum 契约，这是实际场景之一）。了解没有一个运行时比另一个更好是很重要的，这取决于你的场景或测试用例。
 
 The next step is to stabilize `php-ext-wasm` to release a 1.0.0 version.
+>下一步是稳定版的 `php-ext-wasm`，即发布 1.0.0 版本。
 
 See you there!
+>到时再见！
 
 If you want to follow the development, take a look at [@wasmerio](https://twitter.com/wasmerio) and [@mnt_io](https://twitter.com/mnt_io) on Twitter.
+>如果你想要一起开发，可以在 Twitter 上关注 [@wasmerio](https://twitter.com/wasmerio) 和 [@mnt_io](https://twitter.com/mnt_io) 了解最新动态。
