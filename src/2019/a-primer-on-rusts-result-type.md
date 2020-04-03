@@ -1,4 +1,4 @@
-# Rust 的 Result 类型入门
+# 【译】Rust 的 Result 类型入门
 >* A Primer on Rust’s Result Type 译文
 
 >* 原文链接：https://medium.com/@JoeKreydt/a-primer-on-rusts-result-type-66363cf18e6a
