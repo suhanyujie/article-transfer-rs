@@ -6,10 +6,11 @@
 >* 译文来自：https://github.com/suhanyujie/article-transfer-rs
 >* 译者：[suhanyujie](https://www.github.com/suhanyujie)
 
-If you haven't seen it yet, you may want to checkout [part one](https://wiredforge.com/blog/wasmer-plugin-pt-1/index.html) where we went over the basics of using wasmer. In this post we are going to cover how we could pass more complicated data from the wasm module back to the runner.
+如果你还有看过这个系列文章，你最好先查看[第一部分](https://wiredforge.com/blog/wasmer-plugin-pt-1/index.html)，在第一部分中我们回顾了使用 wasmer 的基础知识。在这篇你文章中，我们将讨论怎样将更复杂的数据从 wasm 模块中传递回运行器中。
 
-### Yet Another Plugin
+### 另一个插件
 To start we are going to create another plugin, this one will take a string as an argument and return that string doubled. Here is what that plugin would look like.
+>首先，我们创建另一个插件，这个插件中将一个字符串作为参数，并返回自身的两倍。下面是这个插件的部分代码。
 
 ```rust
 // ./crates/example-plugin/src/lib.rs
@@ -17,6 +18,7 @@ To start we are going to create another plugin, this one will take a string as a
 /// This is the actual code we would 
 /// write if this was a pure rust
 /// interaction
+/// 这段代码是我们用 Rust 实现的需要用的代码
 pub fn double(s: &str) -> String {
     s.repeat(2)
 }
@@ -24,20 +26,24 @@ pub fn double(s: &str) -> String {
 /// Since it isn't we need a way to
 /// translate the data from wasm
 /// to rust
+/// 因为它不是我们需要的将 wasm 数据转换到 rust 数据的代码
 #[no_mangle]
 pub fn _double(ptr: i32, len: u32) -> i32 {
     // Extract the string from memory.
+    // 从内存中取出字符串
     let value = unsafe { 
         let slice = ::std::slice::from_raw_parts(ptr as _, len as _);
         String::from_utf8_lossy(slice)
     };
     // pass the value to `double` and 
     // return the result as a pointer
+    // 将值传递给 `double` 并返回指针形式的结果
     double(&value).as_ptr() as i32
 }
 ```
 
 Most of what is going on here is exactly what we did the last time, the only difference is in that last line it has `.as_ptr()` added to it and the return value is now `i32`. `as_ptr` is a method that will return the byte index in memory of a value, which normally would be a pretty scary thing to deal with but I promise that we are going to survive. So how would we use this new plugin?
+>这里发生的大部分的事情跟我们第一篇所实现的完全相同，唯一不同的是在最后一行中添加了 `.as_ptr()`，返回值现在是 `i32`。`as_ptr` 是一个方法，它将返回一个值在内存中的索引位置（字节索引），一般来讲这是一件可怕的事情，但我保证我们不会发生问题。那么我们该如何使用这个新插件呢？
 
 ```rust
 // ./crates/example-runner/src/main.rs
