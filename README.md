@@ -2,6 +2,7 @@
 
 ## 目录
 ### 2020
+* 2020.4th [【译】用`Wasmer`进行插件开发 第二部分](src/using_wasmer_for_plugins/part2.md)
 * 2020.3th [【译】Rust 中的状态机](src/2020/3.state-machines.md)
 * 2020.2th [【译】数据库基础：用 Go 从零开始写一个 SQL 数据库 —— 第一部分](src/2020/2.Database-basics:-writing-a-SQL-database-from-scratch-in-Go-part1.md)
 
