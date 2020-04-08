@@ -42,7 +42,6 @@ pub fn _double(ptr: i32, len: u32) -> i32 {
 }
 ```
 
-Most of what is going on here is exactly what we did the last time, the only difference is in that last line it has `.as_ptr()` added to it and the return value is now `i32`. `as_ptr` is a method that will return the byte index in memory of a value, which normally would be a pretty scary thing to deal with but I promise that we are going to survive. So how would we use this new plugin?
 >这里发生的大部分的事情跟我们第一篇所实现的完全相同，唯一不同的是在最后一行中添加了 `.as_ptr()`，返回值现在是 `i32`。`as_ptr` 是一个方法，它将返回一个值在内存中的索引位置（字节索引），一般来讲这是一件可怕的事情，但我保证我们不会发生问题。那么我们该如何使用这个新插件呢？
 
 ```rust
@@ -52,54 +51,49 @@ use wasmer_runtime::{
     instantiate,
 };
 
-// For now we are going to use this to read in our wasm bytes
+// 现在，我们将使用它读取 wasm 字节
 static WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/debug/example_plugin.wasm");
 
 fn main() {
     let instance = instantiate(&WASM, &imports!{}).expect("failed to instantiate wasm module");
-    // The changes start here
-    // First we get the module's context
+    // 首先，我们获取模块的上下文
+    // 不同的地方从这里开始
     let context = instance.context();
-    // Then we get memory 0 from that context
-    // web assembly only supports one memory right
-    // now so this will always be 0.
+    // 然后我们从上下文的 web 程序中获得 0 开始索引的内存，目前只支持一块内存，所以它一直是 0
     let memory = context.memory(0);
-    // Now we can get a view of that memory
+    // 现在我们可以获取内存的 view
     let view = memory.view::<u8>();
-    // This is the string we are going to pass into wasm
+    // 这是我们要传递到 wasm 中的字符串
     let s = "supercalifragilisticexpialidocious".to_string();
-    // This is the string as bytes
+    // 将字符串转为字节数组
     let bytes = s.as_bytes();
-    // Our length of bytes
+    // 获取字节数组的长度
     let len = bytes.len();
-    // loop over the wasm memory view's bytes
-    // and also the string bytes
+    // 循环遍历 wasm 内存的 view 的字节和字符串字节
     for (cell, byte) in view[1..len + 1].iter().zip(bytes.iter()) {
-        // set each wasm memory byte to 
-        // be the value of the string byte
+        // 将每个 wasm 内存字节设置为字符串字节的值
         cell.set(*byte)
     }
-    // Bind our helper function
+    // 绑定辅助函数
     let double = instance.func::<(i32, u32), i32>("_double").expect("Failed to bind _double");
-    // Call the helper function an store the start of the returned string
+    // 调用辅助函数，返回字符串的开头放到 start 中
     let start = double.call(1 as i32, len as u32).expect("Failed to execute _double") as usize;
-    // Calculate the end as the start + twice the length
+    // 计算 “start + 两倍长的 len” 的和
     let end = start + (len * 2);
-    // Capture the string as bytes 
-    // from a fresh view of the wasm memory
+    // 从 wasm 内存的新 view 中捕获字符串，并将其转换为字节
     let string_buffer: Vec<u8> = memory
                                     .view()[start..end]
                                     .iter()
                                     .map(|c|c.get())
                                     .collect();
-    // Convert the bytes to a string
+    // 将字节数组转换为字符串
     let wasm_string = String::from_utf8(string_buffer)
                             .expect("Failed to convert wasm memory to string");
     println!("doubled: {}", wasm_string);
 }
 ```
 
-Again, almost all of this is going to be reused from the last example. We need to change the type arguments for `func` ever so slightly and the name of the function. Next we are going to call the `func` just like we did the last time, this time the return value is going to represent the index for the start of our new string. Since we will only ever double the string we can calculate the end by adding twice the original length plus the start, with both the start and the end we can capture the bytes as a slice. If you have the bytes as a slice you can try and convert it into a string using the `String::from_utf8` method. If we were to run this we should see the following.
+同样的，几乎所有代码都在后面的例子中复用。我们需要稍微改变 `func` 的类型参数和名称。接下来我们将调用 `func` 将想我们上次做的那样，这次的返回值将代表新字符串的开始索引。由于我们只会将字符串翻倍，所以我们可以通过将原始长度的两倍加上起始长度来计算结束的位置，在起始部分和结束部分我们可以捕获字节的一部分。如果你有一个字节切片，你可以尝试使用 `String::from_utf8` 方法将其转换为字符串。如果我们运行上面的代码，可以看到如下结果：
 
 ```shell
 cargo run
@@ -107,6 +101,7 @@ doubled: supercalifragilisticexpialidocioussupercalifragilisticexpialidocious
 ```
 
 Huzzah! Success... though the situations where you would know the size of any data after a plugin ran is going to be too small to be useful. Now the big question becomes, if web assembly functions can only return 1 value how could we possibly know both the start and the length of any value coming back? One solution would be to reserve a section of memory that the wasm module could put the length in and then get the length when it's done.
+>万岁！成功了。。。尽管你知道插件运行后数据的大小是很小的。但现在最大的问题是，如果 web assembly 组装的函数只能返回一个值，我们怎么可能同时知道返回值的起始位置和长度呢？一种解决方案是，为 wasm 模块保留一段内存，让它输入长度，然后在完成后获得对应的长度。
 
 ### Two values from one function
 Let's keep the same basic structure of our last plugin, this time though, we are going to get the length from a reserved part of memory.
