@@ -104,7 +104,10 @@ Huzzah! Success... though the situations where you would know the size of any da
 >万岁！成功了。。。尽管你知道插件运行后数据的大小是很小的。但现在最大的问题是，如果 web assembly 组装的函数只能返回一个值，我们怎么可能同时知道返回值的起始位置和长度呢？一种解决方案是，为 wasm 模块保留一段内存，让它输入长度，然后在完成后获得对应的长度。
 
 ### Two values from one function
+>一个函数返回多个值
+
 Let's keep the same basic structure of our last plugin, this time though, we are going to get the length from a reserved part of memory.
+>我们保持上一个插件示例代码的基本结构，这一次，我们将从内存的保留部分获取长度。
 
 ```rust
 pub fn double(s: &str) -> String {
@@ -113,33 +116,35 @@ pub fn double(s: &str) -> String {
 
 #[no_mangle]
 pub fn _double(ptr: i32, len: u32) -> i32 {
-    // Extract the string from memory.
+    // 从内存中获取字符串
     let value = unsafe { 
         let slice = ::std::slice::from_raw_parts(ptr as _, len as _);
         String::from_utf8_lossy(slice)
     };
-    // Double it
+    // 将其变成双倍字符串
     let ret = double(&value);
-    // Capture the length
+    // 获取长度
     let len = ret.len() as u32;
-    // write the length to byte 1 in memory
+    // 将长度写入索引为 1 的内存字节中
     unsafe {
         ::std::ptr::write(1 as _, len);
     }
-    // return the start index
+    // 返回起始索引
     ret.as_ptr() as _
 }
 ```
 
 This time in our plugin we have one change, the call to [`::std::ptr::write`](https://doc.rust-lang.org/std/ptr/fn.write.html), which will write to any place in memory you tell it to any value you want. This is a pretty dangerous thing to do, it is important that we have all our ducks in a row or we may corrupt some existing memory. This is going to write the 4 bytes that make up the variable `len` into memory at index 1, 2, 3, and 4. The key to making that work is that we are going to need to leave those 4 bytes empty when we insert our value from the runner.
+>在这次的插件中，我们一个不同的地方，即调用 [`::std::ptr::write`](https://doc.rust-lang.org/std/ptr/fn.write.html)，它可以将数据写入到内存中的任何地方，只要你告诉它写入的值和位置。这是一个比较危险的事，要非常谨慎的考虑好所有问题，否则可能会破坏现有的内存和数据。现在我们要把 4 字节的 `len` 变量写入到索引为 1、2、3 和 4 的内存中。让这个过程正常工作的关键是，当我们从有 runner 中插入值时，需要将这 4 字节的内存保留为空。
 
-Let's build that.
+我们构建一下程序。
 
 ```shell
 cargo -p example-plugin --target wasm32-unknown-unknown
 ```
 
 Now we can get started on the runner.
+>现在我们开始写 runner。
 
 ```rust
 // ./crates/example-runner/src/main.rs
@@ -148,63 +153,54 @@ use wasmer_runtime::{
     instantiate,
 };
 
-// For now we are going to use this to read in our wasm bytes
+// 现在，我们将使用它读取 wasm 字节
 static WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/debug/example_plugin.wasm");
 
 fn main() {
     let instance = instantiate(&WASM, &imports!{}).expect("failed to instantiate wasm module");
-    // The changes start here
-    // First we get the module's context
+    // 不同点从这里开始，首先我们获取模块的上下文
     let context = instance.context();
-    // Then we get memory 0 from that context
-    // web assembly only supports one memory right
-    // now so this will always be 0.
+    // 然后我们从上下文 web assembly 中获得编号为 0 的内存，目前只支持 1 块内存，所以编号为 0
     let memory = context.memory(0);
-    // Now we can get a view of that memory
+    // 现在获取内存的 view（视图）
     let view = memory.view::<u8>();
-    // Zero our the first 4 bytes of memory
+    // 用 0 填充开始的 4 个字节
     for cell in view[1..5].iter() {
         cell.set(0);
     }
-    // This is the string we are going to pass into wasm
+    // 这是我们要传递到 wasm 中的字符串
     let s = "supercalifragilisticexpialidocious".to_string();
-    // This is the string as bytes
+    // 将字符串转为字节数组
     let bytes = s.as_bytes();
-    // Our length of bytes
+    // 获取字节数组的长度
     let len = bytes.len();
-    // loop over the wasm memory view's bytes
-    // and also the string bytes
+    // 循环遍历 wasm 内存视图的字节和字符串字节
     for (cell, byte) in view[5..len + 5].iter().zip(bytes.iter()) {
-        // set each wasm memory byte to 
-        // be the value of the string byte
+        // 将每个 wasm 字节的值对应设为字符串字节的值
         cell.set(*byte)
     }
-    // Bind our helper function
+    // 绑定辅助函数
     let double = instance.func::<(i32, u32), i32>("_double").expect("Failed to bind _double");
-    // Call the helper function an store the start of the returned string
+    // 调用辅助函数返回存储字符串的起始内存位置
     let start = double.call(5 as i32, len as u32).expect("Failed to execute _double") as usize;
-    // Get an updated view of memory
+    // 获取更新后的内存 view
     let new_view = memory.view::<u8>();
-    // Setup the 4 bytes that will be converted
-    // into our new length
+    // 设置一个新的变量，存储数据转换后的新的长度
     let mut new_len_bytes = [0u8;4];
     for i in 0..4 {
-        // attempt to get i+1 from the memory view (1,2,3,4)
-        // If we can, return the value it contains, otherwise
-        // default back to 0
+        // 如果可以，尝试通过新的 view 的索引（1、2、3、4），返回它对应的数据，否则默认返回 0
         new_len_bytes[i] = new_view.get(i + 1).map(|c| c.get()).unwrap_or(0);
     }
-    // Convert the 4 bytes into a u32 and cast to usize
+    // 将 4 字节转换为 u32 并强制转换为 usize
     let new_len = u32::from_ne_bytes(new_len_bytes) as usize;
-    // Calculate the end as the start + new length
+    // 计算 end 值为 start + new_len
     let end = start + new_len;
-    // Capture the string as bytes 
-    // from the new view of the wasm memory
+    // 从 wasm 内存新 view 中以字节的形式获取字符串
     let string_buffer: Vec<u8> = new_view[start..end]
                                     .iter()
                                     .map(|c|c.get())
                                     .collect();
-    // Convert the bytes to a string
+    // 将字节转换为字符串
     let wasm_string = String::from_utf8(string_buffer)
                             .expect("Failed to convert wasm memory to string");
     println!("doubled: {}", wasm_string);
