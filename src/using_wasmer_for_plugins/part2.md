@@ -208,6 +208,7 @@ fn main() {
 ```
 
 Ok, a few more things are going on in this one. First we immediately update the memory's bytes 1 through 4 to be set to 0, this is where we are going to put the new length. We continue normally until after we call `_double`. This time through we are going to pull those first 4 bytes out of the wasm memory into a 4 byte array and convert that to a u32. We need to cast this u32 to a usize because we are going to be using it in as an index later. We can now update our `end` to use this new value instead of the old one. From that point on we keep going the same way. If we were to run this we should see the following.
+>好了，在上方这个示例中有还会有更多东西。首先，我们更新内存中 1-4 的字节设为 0，这是我们要存放新的长度的地方。接着我们调用 `_double`。这一次，我们把 wasm 内存中的前 4 个字节转换成 4 字节数组，然后再转换成 u32 类型。我们需要将这个 u32 转换为 usize，因为稍后我们要将其当做索引来使用。我们现在可以更新 `end` 来使用新的值。从那一刻起，我们持续这样做。运行这段代码，我们会看到如下结果：
 
 ```shell
 cargo run
@@ -215,11 +216,16 @@ doubled: supercalifragilisticexpialidocioussupercalifragilisticexpialidocious
 ```
 
 Huzzah! Success... and it is far more robust that before. If we executed a wasm module that exported `_double` that actually tripled a string or cut the string in half, we would still know the correct length. Now that we can pass arbitrary sets of bytes from rust to wasm and back again that means we have to tools to pass more complicated data. All we need now is a way to turn any struct into bytes and then back again, for that we can use something like [`bincode`](https://github.com/TyOverby/bincode) which is a binary serialization format used by [WebRender](https://github.com/servo/webrender) and [Servo's ipc-channel](https://github.com/servo/ipc-channel). It implements the traits defined by the serde crate which greatly opens our options.
+>万岁！成功了。。。它比之前更强大。如果我们执行一个导出的 `_double` wasm 模块，这个模块实际上是将一个字符串扩充至原来的三倍，或者将字符串减半，我们仍然知道正确的长度。现在，我们可以将任意的字节从 rust 传递到 wasm，然后再返回，这意味着我们必须使用工具来处理更复杂的数据。我们现在需要的是一种把任何结构转换成字节并返回的方法实现，我们可以使用类似 [`bincode`](https://github.com/TyOverby/bincode) （一个用于二进制格式序列化的库，已经用于 [WebRender](https://github.com/servo/webrender) 和 [Servo's ipc-channel](https://github.com/servo/ipc-channel)）。它实现了 serde crate 中定义的很多 trait。这极大地扩充了我们的选择。
 
 Since there are a bunch of `serde` trait implementations for a bunch of standard rust types including strings and tuples, let's leverage that to create a slightly more interesting example.
+>因为 `serde` crate 中已经为一些标准的 rust 类型实现了很多 trait，包括字符串和元组，我们可以利用它来做一个稍微有趣的例子。
 
 ### Slightly More Interesting™
+>更加有趣
+
 First we want to update the dependencies for both our runner and plugin projects. Update the 2 Cargo.toml files to look like this.
+>首先我们想要更新插件中 runner 和 plugin 依赖项。更新 2 个 Cargo.toml 文件。如下所示：
 
 ```toml
 # ./crates/example-runner/Cargo.toml
@@ -250,26 +256,21 @@ crate-type = ["cdylib"]
 ```
 
 Now we can use bincode both of these projects. This time around, the goal is going to be to create a plugin that will take a tuple of a u8 and a string and return an updated version of that tuple.
+>现在我们可以使用这两个项目的二进制代码。这一次，我们的目标是创建一个插件，它使用 u8 和字符串构成的元组为参数，并返回更新后的元组。
 
 ```rust
 // ./crates/example-plugin/src/lib.rs
 use bincode::{deserialize, serialize};
-/// This is the actual code we would 
-/// write if this was a pure rust
-/// interaction
+/// 如果这是纯 rust 交互，我们的实际代码如下
 pub fn multiply(pair: (u8, String)) -> (u8, String) {
-    // create a repeated version of the string
-    // based on the u8 provided
+    // 根据提供的数据中的 String 部分，创建一个副本
     let s = pair.1.repeat(pair.0 as usize);
-    // Multiply the u8 by the length
-    // of the new string
+    // 将 u8 的数据乘以新字符串的长度
     let u = pair.0.wrapping_mul(s.len() as u8);
     (u, s)
 }
 
-/// Since it isn't we need a way to
-/// translate the data from wasm
-/// to rust
+/// 因为这不是我们需要的方法，我们需要的是从 wasm 转换到 rust 的实现代码
 #[no_mangle]
 pub fn _multiply(ptr: i32, len: u32) -> i32 {
     // Extract the string from memory.
