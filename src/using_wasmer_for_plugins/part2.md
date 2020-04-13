@@ -273,34 +273,36 @@ pub fn multiply(pair: (u8, String)) -> (u8, String) {
 /// 因为这不是我们需要的方法，我们需要的是从 wasm 转换到 rust 的实现代码
 #[no_mangle]
 pub fn _multiply(ptr: i32, len: u32) -> i32 {
-    // Extract the string from memory.
+    // 从内存中提取字符串
     let slice = unsafe { 
         ::std::slice::from_raw_parts(ptr as _, len as _)
     };
-    // deserialize the memory slice
+    // 将内存中的 slice 数据反序列化
     let pair = deserialize(slice).expect("Failed to deserialize tuple");
-    // Get the updated version
+    // 获取新版本的数据
     let updated = multiply(pair);
-    // serialize the updated value
+    // 将新的值序列化
     let ret = serialize(&updated).expect("Failed to serialize tuple");
-    // Capture the length
+    // 获取数据的长度
     let len = ret.len() as u32;
-    // write the length to byte 1 in memory
+    // 将长度写入到内存块的第一字节
     unsafe {
         ::std::ptr::write(1 as _, len);
     }
-    // return the start index
+    // 返回起始地址索引
     ret.as_ptr() as _
 }
 ```
 
 Just like last time time we take in our `ptr` and `len` arguments, we pass those along to `::std::slice::from_raw_parts` which creates a reference to our bytes. After we get those bytes we can deserialize them into a tuple of a u8 and a string. Now we can pass that tuple along to the `multiply` function and capture the results as `updated`. Next we are going to serialize that value into a `Vec<u8>` and as the variable `ret`. The rest is going to be exactly like our string example, capture the length, write it to memory index 1 and return the start index of the bytes. Let's build this.
+>就像上次我们接收 `ptr` 和 `len` 参数那样，我们将其传递给 `::std::slice::from_raw_parts`，这样会创建字节的引用。拿到这些字节后，我们可以将他们反序列化为 u8 和字符串组成的元组。现在我们可以将元组传递给 `multiply` 函数，并获取结果 `updated`。接下来，我们将该值序列化为 `Vec<u8>` 并作为变量 `ret`。其余部分将与我们的字符串示例完全相同，捕获长度，将其写入索引为 1 的内存中并返回字节的起始索引。我们编译一下试试。
 
 ```shell
 cargo -p example-plugin --target wasm32-unknown-unknown
 ```
 
 Now for our runner.
+>现在要实现我们的 runner。
 
 ```rust
 // ./crates/example-runner/src/main.rs
@@ -319,66 +321,61 @@ use bincode::{
     serialize,
 };
 
-// For now we are going to use this to read in our wasm bytes
+// 现在我们要读取 wasm 字节
 static WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/debug/example_plugin.wasm");
 
 fn main() {
     let instance = instantiate(&WASM, &imports!{}).expect("failed to instantiate wasm module");
-    // The changes start here
-    // First we get the module's context
+    // 不同从这里开始
+    // 首先我们获取模块的上下文
     let context = instance.context();
-    // Then we get memory 0 from that context
-    // web assembly only supports one memory right
-    // now so this will always be 0.
+    // 然后我们从 web assembly 的上下文获取编号为 0 的内存，因为暂时只支持一块内存，所以这个总是 0。
     let memory = context.memory(0);
-    // Now we can get a view of that memory
+    // 现在我们可以获取内存的 view
     let view = memory.view::<u8>();
-    // Zero our the first 4 bytes of memory
+    // 前 4 个字节的内存用 0 填充
     for cell in view[1..5].iter() {
         cell.set(0);
     }
-    // This is the string we are going to pass into wasm
+    // 这是我们要传递到 wasm 中的字符串
     let s = "supercalifragilisticexpialidocious".to_string();
     let now = SystemTime::now();
     let diff = now.duration_since(UNIX_EPOCH).expect("Failed to calculate timestamp");
     let u = ((diff.as_millis() % 10) + 1) as u8;
     let pair = (u, s);
     let bytes = serialize(&pair).expect("Failed to serialize tuple");
-    // Our length of bytes
+    // 字节的长度
     let len = bytes.len();
-    // loop over the wasm memory view's bytes
-    // and also the string bytes
+    // 循环遍历 wasm 内存中 view 字节和字符串字节
     for (cell, byte) in view[5..len + 5].iter().zip(bytes.iter()) {
-        // set each wasm memory byte to 
-        // be the value of the string byte
+        // 将每个 wasm 内存字节设置为对应字符串字节的值
         cell.set(*byte)
     }
-    // Bind our helper function
+    // 绑定辅助函数
     let double = instance.func::<(i32, u32), i32>("_multiply").expect("Failed to bind _multiply");
-    // Call the helper function an store the start of the returned string
+    // 调用辅助函数并将返回的字符串存储在 start 中
     let start = double.call(5 as i32, len as u32).expect("Failed to execute _multiply") as usize;
     // Get an updated view of memory
+    // 获取更新的内存 view
     let new_view = memory.view::<u8>();
     // Setup the 4 bytes that will be converted
     // into our new length
+    // 设定一个 4 字节的空间，用于存储我们的长度数据
     let mut new_len_bytes = [0u8;4];
     for i in 0..4 {
-        // attempt to get i+1 from the memory view (1,2,3,4)
-        // If we can, return the value it contains, otherwise
-        // default back to 0
+        // 如果可以，尝试从内存 view 的 (1,2,3,4) 获取 i+1 的值，否则返回 0
         new_len_bytes[i] = new_view.get(i + 1).map(|c| c.get()).unwrap_or(0);
     }
-    // Convert the 4 bytes into a u32 and cast to usize
+    // 将 4 个字节类型转换为 u32 再转换为 usize
     let new_len = u32::from_ne_bytes(new_len_bytes) as usize;
-    // Calculate the end as the start + new length
+    // 用 start + new_len 计算 end 值
     let end = start + new_len;
-    // Capture the string as bytes 
-    // from the new view of the wasm memory
+    // 从 wasm 内存的 view 中获取字符串并转换为字节数组 
     let updated_bytes: Vec<u8> = new_view[start..end]
                                     .iter()
                                     .map(|c|c.get())
                                     .collect();
-    // Convert the bytes to a string
+    // 将字节数组转换为字符串
     let updated: (u8, String) = deserialize(&updated_bytes)
                             .expect("Failed to convert wasm memory to tuple");
     println!("multiply {}: ({}, {:?})", pair.0, updated.0, updated.1);
@@ -386,6 +383,7 @@ fn main() {
 ```
 
 First, we have updated our `use` statements to include some `std::time` items and the bincode functions for serializing and deserializing. We are going to use the same string as we did last time and calculate a pseudo random number between 1 and 10 that will serve as the parts of our tuple. Once we have constructed our tuple, we pass that off to `bincode::serialize` which gets us back to a `Vec<u8>`. We continue on just like our string example until after we get the new length back from the wasm module. At this point we are going to build the updated_bytes the same as before and pass those along to `bincode::deserialize` which should get us back to a tuple.
+>首先，我们更新了 `use` 语句，用来包含 `std::time` 项和序列化、反序列化的二进制代码函数。我们将使用和前面一样的字符串参数，计算 1~10 之间的伪随机数，该随机数作为元组的一部分，一旦我们构建好了元组，我们将其传递给 `bincode::serialize`，并返回 `Vec<u8>` 类型数据。后面，就像我们的字符串示例一样，继续操作，直到从 wasm 模块中获得新的长度为止。此时，我们将构建和之前一样的 updated_bytes，并将其传递给 `bincode::deserialize` 函数，最终得到元组类型的返回值。
 
 ```shell
 cargo run
@@ -393,5 +391,6 @@ multiply 2: (136, "supercalifragilisticexpialidocioussupercalifragilisticexpiali
 ```
 
 Huzzah! Another success! At this point it might be a good idea to address the ergonomics all of this, if we asked another developer to understand all of this, do you think anyone would build a plugin for our system? Probably not. In the next post we are going to cover how to ease that process by leveraging `proc_macros`.
+>万岁！一个新的成功！在这一点上，对于解决人体工程学这是一个好的方法，如果我们询问另一个开发者了解这个方式，你认为你能像这样清楚的了解如何构建一个插件吗？可能不会。在下一篇中，我们将介绍如何通过 `proc_macros` 来简化这个过程。
 
-[part three](https://wiredforge.com/blog/wasmer-plugin-pt-3/index.html)
+[第三部分](https://wiredforge.com/blog/wasmer-plugin-pt-3/index.html)
