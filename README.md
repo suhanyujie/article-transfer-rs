@@ -40,3 +40,9 @@
         * [zend_string](./src/PHP-Internals-Book/php7/internal_types/strings/zend_strings.md)
 
 ### [PHP-Parser-doc](./src/PHP-Parser-doc)
+
+## 其他
+* [PHP 编译器项目](https://github.com/ircmaxell/php-compiler)，可将 PHP 代码编译成可执行的二进制文件
+
+## 参考
+* https://github.com/nikic/PHP-Parser
