@@ -46,3 +46,4 @@
 
 ## 参考
 * https://github.com/nikic/PHP-Parser
+* https://blog.ircmaxell.com/2019/04/compilers-ffi.html
