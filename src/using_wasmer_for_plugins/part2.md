@@ -1,4 +1,4 @@
-# 使用 Wasmer 开发插件-第二部分
+# 【译】使用 Wasmer 开发插件-第二部分
 >* Using Wasmer for Plugins Part 2 译文
 
 >* 原文链接：https://wiredforge.com/blog/wasmer-plugin-pt-2/index.html
