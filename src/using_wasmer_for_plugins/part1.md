@@ -6,7 +6,7 @@
 >* 译者：[suhanyujie](https://github.com/suhanyujie)
 
 * 第一部分
-* [第二部分](src/using_wasmer_for_plugins/part2.md)
+* [第二部分](part2.md)
 
 几个月之前，[Wasmer](https://wasmer.io/) 团队发布了一个 `Web Assembly(aka wasm)` 解释器，用于 Rust 程序的嵌入式开发。对于任何想要在项目中添加插件的人来说，这尤其令人兴奋，因为 Rust 提供了一种直接将程序编译到 `wasm` 的方法，这个应该是一个很好的选择。在这个系列的博客文章中，我们将研究如何使用 `wasmer` 和 `rust` 构建插件系统。
 

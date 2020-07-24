@@ -6,7 +6,7 @@
 >* 译文来自：https://github.com/suhanyujie/article-transfer-rs
 >* 译者：[suhanyujie](https://www.github.com/suhanyujie)
 
-* [第一部分](src/using_wasmer_for_plugins/part1.md)
+* [第一部分](part1.md)
 * 第二部分
 
 如果你还有看过这个系列文章，你最好先查看[第一部分](https://wiredforge.com/blog/wasmer-plugin-pt-1/index.html)，在第一部分中我们回顾了使用 wasmer 的基础知识。在这篇你文章中，我们将讨论怎样将更复杂的数据从 wasm 模块中传递回运行器中。
