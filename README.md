@@ -2,6 +2,7 @@
 
 ## 目录
 ### 2020
+* 2020.7th [【译】状态机](src/2020/3.state-machines.md)
 * 2020.6th [【译】我的阅读习惯](src/2020/6.My-Reading-Habits.md)
 * 2020.5th [【译】数据库基础：用 Go 从零开始写一个 SQL 数据库 —— 第二部分](src/2020/5.Database-basics:-writing-a-SQL-database-from-scratch-in-Go-part2.md)
 * 2020.4th [【译】用`Wasmer`进行插件开发 第二部分](src/using_wasmer_for_plugins/part2.md)
