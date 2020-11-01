@@ -2,7 +2,9 @@
 
 ## 目录
 ### 2020
-* 2020.10th [【译】Rust 中的 char 和 Go 中的 rune 有什么区别](src/2020/10.What-is-the-difference-between-a-Rust-char-and-a-Go-rune.md)
+* 2020.12th [【译】用 Rust 实现 csv 解析-part2](src/2020/12.Rust-and-CSV-parsing-part2.md)
+* 2020.11th [【译】用 Rust 实现 csv 解析-part1](src/2020/12.Rust-and-CSV-parsing-part1.md)
+* 2020.10th [【译】Rust 中的 char 和 Go 中的 rune 有什么区别 1](src/2020/10.What-is-the-difference-between-a-Rust-char-and-a-Go-rune.md)
 * 2020.9th [【译】TCP/IP 网络编程基础系列-数值编码](src/2020/9.Number-Encoding.md)
 * 2020.8th [【译】我最喜欢的 Rust 函数签名](src/2020/8.My-Favorite-Rust-Function-Signature.md)
 * 2020.7th [【译】状态机](src/2020/3.state-machines.md)
