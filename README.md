@@ -2,6 +2,7 @@
 
 ## 目录
 ### 2020
+* 2020.15th [【译】用 Rust 实现 csv 解析-part5](src/2020/16.Rust-and-CSV-parsing-part5.md)
 * 2020.14th [【译】用 Rust 实现 csv 解析-part4](src/2020/14.Rust-and-CSV-parsing-part4.md)
 * 2020.13th [【译】用 Rust 实现 csv 解析-part3](src/2020/13.Rust-and-CSV-parsing-part3.md)
 * 2020.12th [【译】用 Rust 实现 csv 解析-part2](src/2020/12.Rust-and-CSV-parsing-part2.md)
