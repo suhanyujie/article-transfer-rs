@@ -1,6 +1,9 @@
 ## 一些 Rust/Go 文章翻译
 
 ## 目录
+### 2021
+* 2021.1th [【译】用 Rust 实现 csv 解析-part6](src/2021/1.Rust-and-CSV-parsing-part6.md)
+
 ### 2020
 * 2020.15th [【译】用 Rust 实现 csv 解析-part5](src/2020/16.Rust-and-CSV-parsing-part5.md)
 * 2020.14th [【译】用 Rust 实现 csv 解析-part4](src/2020/14.Rust-and-CSV-parsing-part4.md)
