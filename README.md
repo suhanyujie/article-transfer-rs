@@ -1,4 +1,5 @@
 ## 一些 Rust/Go 文章翻译
+[![Go Reference](https://pkg.go.dev/badge/ishenghuo.cnblogs.com.svg)](https://pkg.go.dev/ishenghuo.cnblogs.com)
 
 ## 目录
 ### 2021
@@ -60,3 +61,4 @@
 ## 参考
 * https://github.com/nikic/PHP-Parser
 * https://blog.ircmaxell.com/2019/04/compilers-ffi.html
+* 创建 icon 图标 https://pkg.go.dev/badge/
