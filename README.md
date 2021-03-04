@@ -59,6 +59,11 @@
 ## 其他
 * [PHP 编译器项目](https://github.com/ircmaxell/php-compiler)，可将 PHP 代码编译成可执行的二进制文件
 
+## 一些设置
+### git 代理
+* 设置 `git config --local http.proxy 127.0.0.1:1087`
+* 查询 `git config --local http.proxy`
+
 ## 参考
 * https://github.com/nikic/PHP-Parser
 * https://blog.ircmaxell.com/2019/04/compilers-ffi.html
