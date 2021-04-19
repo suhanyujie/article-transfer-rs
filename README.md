@@ -3,6 +3,7 @@
 
 ## 目录
 ### 2021
+* 2021.3th [【译】基于 Rust 用 Bevy 实现节奏大师游戏](src/2021/4.Rhythm-game-in-Rust-using-bevy.md)
 * 2021.2th [【译】用 Rust 实现 csv 解析-part7](src/2021/2.Rust-and-CSV-parsing-part7.md)
 * 2021.1th [【译】用 Rust 实现 csv 解析-part6](src/2021/1.Rust-and-CSV-parsing-part6.md)
 
