@@ -162,8 +162,7 @@ stdin().read_line(&mut my_string)
 
 _read_line()_ 函数返回一个 Result 类型。我们使用 _expect()_ 函数处理它。在这种情形下是完全没问题的，因为 _read_line()_ 出错的几率非常小。用户通常只能在终端输入一个字符串，而这正是 _read_line()_ 所需要处理的。
 
-The string of user input returned by _read_line()_ is stored in the _my_string_ variable.
->通过 _read_line()_ 把用户输入的字符串返回并存在 _my_string_ 变量中。
+通过 _read_line()_ 把用户输入的字符串返回并存在 _my_string_ 变量中。
 
 ## 重要部分
 
