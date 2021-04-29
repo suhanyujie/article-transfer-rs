@@ -165,8 +165,7 @@ _read_line()_ 函数返回一个 Result 类型。我们使用 _expect()_ 函数�
 The string of user input returned by _read_line()_ is stored in the _my_string_ variable.
 >通过 _read_line()_ 把用户输入的字符串返回并存在 _my_string_ 变量中。
 
-## The Juicy Part
->渐入佳境
+## 重要部分
 
 现在我们已经将输入的字符串存在 _my_string_ 中，我们需要将其转换为浮点数。使用 _parse()_ 函数可以实现，然后将浮点数结果返回。所以我们有不止 Result 的类型需要处理，但这一次，我们很可能会出现一个错误。如果用户输入的是非数字， _parse()_ 将会返回一个错误类型的 Result（_Err_）。如果发生这种情况，我们不希望程序崩溃。而是希望提示用户没有输入正确的数字，请再试一次。为此，我们需要写好调用 _parse()_ 成功时的逻辑，还要写好调用失败时的逻辑。类似于逐个处理匹配表达式可能的结果。
 
