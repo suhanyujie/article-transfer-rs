@@ -1,6 +1,4 @@
-# 【译】Rust 的 Result 类型基础
-
->* A Primer on Rust’s Result Type 译文
+>* A Primer on Rust’s Result Type 译文（ 【译】Rust 的 Result 类型基础）
 >* 原文链接：https://medium.com/@JoeKreydt/a-primer-on-rusts-result-type-66363cf18e6a
 >* 原文作者：[Joe Kreydt](https://medium.com/@JoeKreydt?)
 >* 译文出处：https://github.com/suhanyujie/article-transfer-rs
