@@ -3,7 +3,7 @@
 
 ## 目录
 ### 2021
-* 2021.4th[【译】无缓冲 I/O 会让你的 Rust 程序变慢](/src/2021/7.unbuffered-io-slows-rust-programs.md)
+* 2021.5th[【译】无缓冲 I/O 会让你的 Rust 程序变慢](/src/2021/7.unbuffered-io-slows-rust-programs.md)
 * 2021.4th[【译】学习飞行：用 Rust 模拟种群进化 part1](src/2021/3.Learning-to-Fly-Let-s-create-a-simulation-in-Rust-pt1.md)
 * 2021.3th [【译】基于 Rust 用 Bevy 实现节奏大师游戏](src/2021/4.Rhythm-game-in-Rust-using-bevy.md)
 * 2021.2th [【译】用 Rust 实现 csv 解析-part7](src/2021/2.Rust-and-CSV-parsing-part7.md)
@@ -36,8 +36,8 @@
 * [【译】学习写解析器组合器](src/2019/Learning-Parser-Combinators-With-Rust.md)
 * [【译】用`Wasmer`进行插件开发 第一部分](src/using_wasmer_for_plugins)
 
-## plan
-- [https://blog.yoshuawuyts.com/state-machines/](https://blog.yoshuawuyts.com/state-machines/)
+## 计划翻译
+- https://blog.yoshuawuyts.com/uninit-read-write/
 
 ## 规范
 ### 文件名
