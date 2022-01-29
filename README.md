@@ -2,6 +2,10 @@
 [![Go Reference](https://pkg.go.dev/badge/ishenghuo.cnblogs.com.svg)](https://pkg.go.dev/ishenghuo.cnblogs.com)
 
 ## 目录
+
+### 2022
+* 2022.1th[【译】Rust 中的错误处理](/src/2022/2.rust-error-handling.md)   doing
+
 ### 2021
 * 2021.5th[【译】无缓冲 I/O 会让你的 Rust 程序变慢](/src/2021/7.unbuffered-io-slows-rust-programs.md)
 * 2021.4th[【译】学习飞行：用 Rust 模拟种群进化 part1](src/2021/3.Learning-to-Fly-Let-s-create-a-simulation-in-Rust-pt1.md)
