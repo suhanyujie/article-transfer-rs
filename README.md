@@ -4,7 +4,8 @@
 ## 目录
 
 ### 2022
-* 2022.1th[【译】Rust 中的错误处理](/src/2022/2.rust-error-handling.md)   doing
+* 2022.1th[【译】教程：开始使用多模块工作区](/src/2022/5.Getting-started-with-multi-module-workspaces.md)
+* 2022.1th[【译】Rust 中的错误处理](/src/2022/2.rust-error-handling.md)
 
 ### 2021
 * 2021.5th[【译】无缓冲 I/O 会让你的 Rust 程序变慢](/src/2021/7.unbuffered-io-slows-rust-programs.md)
