@@ -45,6 +45,7 @@
 
 ## 计划翻译
 - https://blog.yoshuawuyts.com/uninit-read-write/
+- Fixing Memory Leaks in Rust https://onesignal.com/blog/solving-memory-leaks-in-rust/
 
 ## 规范
 ### 文件名
