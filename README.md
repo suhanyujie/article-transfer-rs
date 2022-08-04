@@ -79,4 +79,5 @@
 * https://github.com/nikic/PHP-Parser
 * https://blog.ircmaxell.com/2019/04/compilers-ffi.html
 * 创建 icon 图标 https://pkg.go.dev/badge/
-* html 转 markdown 神器 https://sitdown.mdnice.com/Demo.html
+* html 转 markdown 神器 https://github.com/mdnice/sitdown
+* 其他 html 转 markdown https://juejin.cn/post/7067854925899759624
