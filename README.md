@@ -4,6 +4,7 @@
 ## 目录
 
 ### 2022
+* 2022.11th [【译】用 Rust 实现 csv 解析-part8](/src/2022/11.Rust-and-CSV-parsing-part8.md)
 * 2022.4th [ go 版本管理（g）源码阅读笔记](/src/2022/8.g-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0.md)
 * 2022.3th[【译】教程：开始使用多模块工作区](/src/2022/5.Getting-started-with-multi-module-workspaces.md)
 * 2022.2th[【译】12 条你可能还不知道的 Rust 提示和技巧](/src/2022/1.12-rust-tips-and-tricks-you-might-not-know-yet.md)
