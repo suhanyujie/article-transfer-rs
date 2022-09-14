@@ -4,6 +4,8 @@
 ## 目录
 
 ### 2022
+* 2022.13th [【译】Advent of Code 2020 第2天](/src/2022/13.advent-of-code-2020-day2.md)
+* 2022.12th [【译】Advent of Code 2020 第1天](/src/2022/12.advent-of-code-2020-day1-part1.md)
 * 2022.11th [【译】用 Rust 实现 csv 解析-part8](/src/2022/11.Rust-and-CSV-parsing-part8.md)
 * 2022.4th [ go 版本管理（g）源码阅读笔记](/src/2022/8.g-%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0.md)
 * 2022.3th[【译】教程：开始使用多模块工作区](/src/2022/5.Getting-started-with-multi-module-workspaces.md)
